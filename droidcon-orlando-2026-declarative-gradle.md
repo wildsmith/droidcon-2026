@@ -277,11 +277,11 @@ android {
 - Separates **software definition** from **build logic**
 
 
-- Currently in **EAP3** (Third Early Access Preview, April 2025)
+- Actively evolving — check the official docs for current status
 
 - Backed by Gradle Inc. - actively developed with monthly updates
 
-> Speaker Notes: Declarative Gradle is Gradle's initiative to create a clear separation between what your project IS versus how it gets built. The DCL language is a restricted subset of Kotlin - no arbitrary code, no imperative logic, just pure configuration. Note: these slides reference EAP3 (April 2025). By the time you're watching this, a newer EAP may be out - check the Gradle newsletter or declarative.gradle.org for the latest.
+> Speaker Notes: Declarative Gradle is Gradle's initiative to create a clear separation between what your project IS versus how it gets built. The DCL language is a restricted subset of Kotlin - no arbitrary code, no imperative logic, just pure configuration. Status changes frequently — check the Gradle newsletter or declarative.gradle.org for the latest details.
 
 ---
 
@@ -309,7 +309,7 @@ android {
 | `allprojects`/`subprojects` cause coupling | Software Types + defaults in settings |
 | Plugin conflicts and ordering issues | Controlled, typed plugin application |
 
-> Speaker Notes: [PACING: Give 3 seconds for the audience to scan the table, then anchor on row 2.] Let me draw your attention to the second row - IDE import is slow and fragile. How many of you have waited 3+ minutes for a Gradle sync after touching a build file? That's because Gradle has to evaluate every build script sequentially just to understand your project structure. DCL eliminates that by being statically analyzable. The IDE can understand your project without executing anything. The other rows follow the same pattern: today's pain point on the left, DCL's structural fix on the right. [TRANSITION: The enterprise version of this story is even more compelling.]
+> Speaker Notes: [PACING: Give 3 seconds for the audience to scan the table, then anchor on row 2.] Quick note on row 2 — IDE import is slow and fragile. How many of you have waited 3+ minutes for a Gradle sync after touching a build file? That's because Gradle has to evaluate every build script sequentially just to understand your project structure. DCL eliminates that by being statically analyzable. The IDE can understand your project without executing anything. The other rows follow the same pattern: today's pain point on the left, DCL's structural fix on the right. [TRANSITION: The enterprise version of this story is even more compelling.]
 
 ---
 
@@ -602,8 +602,8 @@ defaults {
 
 | IDE | Status | Features |
 |---|---|---|
-| **Android Studio** (Nightly) | ✅ Available | Syntax highlighting, completion, semantic analysis |
-| **IntelliJ IDEA** (2025.2 EAP) | ✅ Available | Same as Android Studio |
+| **Android Studio** | ✅ Available | Syntax highlighting, completion, semantic analysis |
+| **IntelliJ IDEA** | ✅ Available | Same as Android Studio |
 | **Visual Studio Code** | ✅ Extension available | Highlighting, completion, mutations |
 | **Eclipse IDE** | ✅ Plugin available | Highlighting, completion |
 
@@ -761,7 +761,7 @@ BUILD SUCCESSFUL with 3 isolation violations
 | Room / KSP | 🟡 Partial | KSP itself needs to be DCL-aware |
 | Firebase / Crashlytics | ❓ Unknown | Config-time file manipulation |
 
-**Bottom line**: Any plugin that runs imperative logic during configuration is potentially incompatible.
+**Takeaway**: Any plugin that runs imperative logic during configuration is potentially incompatible.
 
 > Speaker Notes: [PACING: This is a 7-row table. Give 4-5 seconds, then anchor.] Let me be upfront about the uncomfortable truth. Look at the right side. Lots of yellow and question marks. AGP and KGP are actively being worked on by Gradle and Google. But Hilt? SafeArgs? Firebase? Those are question marks. And look at the bottom row in bold: any plugin that runs imperative logic during configuration is potentially incompatible. If your build uses Hilt or Room, you'll need to wait for those ecosystems to adapt. [TRANSITION: If you're a plugin author yourself, here's what to do.]
 

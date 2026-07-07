@@ -1,4 +1,4 @@
-# Declarative Gradle — DroidCon Orlando 2026
+# Declarative Gradle: DroidCon Orlando 2026
 
 **"The End of build.gradle: Embracing Declarative Gradle and Software Types"**
 
