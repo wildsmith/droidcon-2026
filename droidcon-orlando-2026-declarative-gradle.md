@@ -1426,7 +1426,7 @@ androidLibrary {
 | `.windsurf/workflows/migrate-to-dcl.md` | Windsurf (Cascade) |
 | `.claude/commands/dcl-migration-check.md` | Claude Code |
 
-<p style="text-align:center; margin-top:16px; font-size:0.85em;"><strong style="color:#00c9db;">github.com/cof-sandbox/gradle-dcl-droidcon-2026</strong></p>
+<p style="text-align:center; margin-top:16px; font-size:0.85em;"><strong style="color:#00c9db;">github.com/wildsmith/droidcon-2026</strong></p>
 
 > Speaker Notes: The AI migration skill I just showed you is in the same GitHub repo as these slides. There are two versions, one for Windsurf and one for Claude Code. Clone the repo or download the appropriate file into your project, and run it against your build files. If you're on a different AI coding assistant, the markdown is self-explanatory enough to adapt.
 
