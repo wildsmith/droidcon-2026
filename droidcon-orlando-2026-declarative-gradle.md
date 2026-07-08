@@ -41,13 +41,13 @@ DroidCon Orlando | July 2026
 
 <div style="position:relative; padding-left:50px; margin-top:10px; font-size:0.82em;">
 <div style="position:absolute; left:20px; top:0; bottom:0; width:0; border-left:3px dashed rgba(245,166,35,0.6); opacity:0.9;"></div>
-<div style="position:relative; margin-bottom:20px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🌅</span> <strong style="color:#f5a623;">What is Declarative Gradle?</strong><br><span style="color:#ccc; font-size:0.85em;">and why should you care?</span></div>
-<div style="position:relative; margin-bottom:20px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🐚</span> <strong style="color:#f5a623;">The Android experience today</strong><br><span style="color:#ccc; font-size:0.85em;">the problem we're solving</span></div>
-<div style="position:relative; margin-bottom:20px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🌊</span> <strong style="color:#00c9db;">DCL syntax & real examples</strong><br><span style="color:#ccc; font-size:0.85em;">what it looks like in practice</span></div>
-<div style="position:relative; margin-bottom:20px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🏄</span> <strong style="color:#00c9db;">Isolated Projects</strong><br><span style="color:#ccc; font-size:0.85em;">the complementary enforcement feature</span></div>
-<div style="position:relative; margin-bottom:20px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🏝️</span> <strong style="color:#3DDC84;">Migration path & pitfalls</strong><br><span style="color:#ccc; font-size:0.85em;">how to get there</span></div>
-<div style="position:relative; margin-bottom:20px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🐠</span> <strong style="color:#3DDC84;">Plugin authoring in DCL</strong><br><span style="color:#ccc; font-size:0.85em;">for build engineers</span></div>
-<div style="position:relative; margin-bottom:20px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🤖</span> <strong style="color:#3DDC84;">AI-assisted migration</strong><br><span style="color:#ccc; font-size:0.85em;">tooling for scale</span></div>
+<div style="position:relative; margin-bottom:12px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🌅</span> <strong style="color:#f5a623;">What is Declarative Gradle?</strong><br><span style="color:#ccc; font-size:0.85em;">and why should you care?</span></div>
+<div style="position:relative; margin-bottom:12px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🐚</span> <strong style="color:#f5a623;">The Android experience today</strong><br><span style="color:#ccc; font-size:0.85em;">the problem we're solving</span></div>
+<div style="position:relative; margin-bottom:12px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🌊</span> <strong style="color:#00c9db;">DCL syntax & real examples</strong><br><span style="color:#ccc; font-size:0.85em;">what it looks like in practice</span></div>
+<div style="position:relative; margin-bottom:12px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🏄</span> <strong style="color:#00c9db;">Isolated Projects</strong><br><span style="color:#ccc; font-size:0.85em;">the complementary enforcement feature</span></div>
+<div style="position:relative; margin-bottom:12px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🏝️</span> <strong style="color:#3DDC84;">Migration path & pitfalls</strong><br><span style="color:#ccc; font-size:0.85em;">how to get there</span></div>
+<div style="position:relative; margin-bottom:12px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🐠</span> <strong style="color:#3DDC84;">Plugin authoring in DCL</strong><br><span style="color:#ccc; font-size:0.85em;">for build engineers</span></div>
+<div style="position:relative; margin-bottom:12px;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🤖</span> <strong style="color:#3DDC84;">AI-assisted migration</strong><br><span style="color:#ccc; font-size:0.85em;">tooling for scale</span></div>
 <div style="position:relative; margin-bottom:0;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🌴</span> <strong style="color:#fff;">Resources & Q&A</strong></div>
 </div>
 
@@ -277,22 +277,24 @@ android {
 - Separates **software definition** from **build logic**
 
 
-- Actively evolving — check the official docs for current status
+- Actively evolving, check the official docs for current status
 
 - Backed by Gradle Inc. - actively developed with monthly updates
 
-> Speaker Notes: Declarative Gradle is Gradle's initiative to create a clear separation between what your project IS versus how it gets built. The DCL language is a restricted subset of Kotlin - no arbitrary code, no imperative logic, just pure configuration. Status changes frequently — check the Gradle newsletter or declarative.gradle.org for the latest details.
+> Speaker Notes: Declarative Gradle is Gradle's initiative to create a clear separation between what your project IS versus how it gets built. The DCL language is a restricted subset of Kotlin - no arbitrary code, no imperative logic, just pure configuration. Status changes frequently. Check the Gradle newsletter or declarative.gradle.org for the latest details.
 
 ---
 
 # Key Principles (from Gradle)
 
 1. **Ease of use** for regular software developers
-  - Define software without understanding build system internals
+    - Define software without understanding build system internals
+
 2. **Complete flexibility** for build engineers
-  - Power users retain full automation capabilities
+    - Power users retain full automation capabilities
+
 3. **Excellent IDE integration**
-  - Fast, reliable imports; tooling can safely modify definitions
+    - Fast, reliable imports; tooling can safely modify definitions
 
 
 > Speaker Notes: These three principles drive the project. The first is critical - most app developers shouldn't need to understand how Gradle works internally just to add a dependency or change a compile SDK version.
@@ -499,6 +501,8 @@ abstract class AndroidLibrarySoftwareType {
 
 # `settings.gradle.dcl`: Defaults and Ecosystem Plugins
 
+<div class="horror-scroll-container" style="height:420px;">
+
 ```kotlin
 // settings.gradle.dcl
 pluginManagement {
@@ -536,6 +540,8 @@ defaults {
     }
 }
 ```
+
+</div>
 
 > Speaker Notes: The settings file is where build engineers set up the ecosystem. Three things to notice: First, dependencyResolutionManagement centralizes your repositories - no more allprojects { repositories { } } blocks scattered across modules. Second, the defaults block at the bottom - set compileSdk once, apply everywhere. No more convention plugins that fight each other. Every androidLibrary and androidApplication in your project inherits these values unless explicitly overridden.
 
@@ -1093,20 +1099,15 @@ dependencyResolutionManagement {
 
 # Your Convention Plugin, Evolved
 
-```
-┌─────────────────────────────────────────────────────┐
-│  Your Convention Plugin Today          ≈  Software  │
-│                                            Type     │
-├─────────────────────────────────────────────────────┤
-│  applies AGP/KGP                       → implicit   │
-│  sets compileSdk, minSdk, targetSdk    → defaults   │
-│  configures signing                    → feature    │
-│  wires test dependencies               → feature    │
-│  configures lint rules                 → feature    │
-│  sets Java/Kotlin version              → defaults   │
-│  applies DexGuard/R8                   → feature    │
-└─────────────────────────────────────────────────────┘
-```
+| Your Convention Plugin Today | In DCL |
+|---|---|
+| applies AGP/KGP | → implicit (via Software Type) |
+| sets compileSdk, minSdk, targetSdk | → settings defaults |
+| configures signing | → project feature |
+| wires test dependencies | → project feature |
+| configures lint rules | → project feature |
+| sets Java/Kotlin version | → settings defaults |
+| applies DexGuard/R8 | → project feature |
 
 If your build already consolidates logic into a centralized plugin...
 **you're already thinking like DCL.**
@@ -1169,22 +1170,22 @@ graph TD
 
 # DCL Status and Compatibility Matrix
 
-| Component | Status (check docs for latest) |
+| Component | Status (as of EAP3, April 2025) |
 |---|---|
 | DCL file format (`.gradle.dcl`) | ✅ Experimental |
 | Android ecosystem plugin | ✅ Prototype available |
 | Kotlin ecosystem plugin | ✅ Prototype available |
 | Java ecosystem plugin | ✅ Prototype available |
 | `gradle init` with DCL | ✅ Available (Gradle 8.12+) |
-| Android Studio support | ✅ Available |
-| IntelliJ IDEA support | ✅ Available |
+| Android Studio support | ✅ Nightly builds |
+| IntelliJ IDEA support | ✅ 2025.2 EAP |
 | VS Code extension | ✅ Available |
 | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px; border-left:3px solid #ef4444;">Production readiness</span> | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px;">❌ <strong style="color:#ef4444;">Not yet</strong></span> |
 | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px; border-left:3px solid #ef4444;">Plugin author adoption</span> | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px;">❌ <strong style="color:#ef4444;">Not yet</strong></span> |
 
 <small>*"Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers."* - Official docs</small>
 
-> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] Focus on the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. Read the quote at the bottom. That's straight from Gradle's official docs. I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
+> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] I want to draw your eyes to the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. Read the quote at the bottom. That's straight from Gradle's official docs. I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
 
 ---
 
@@ -1201,7 +1202,7 @@ graph TD
 </div>
 
 
-> Speaker Notes: The roadmap shows steady progress. Updates are published in the Gradle newsletter. Stable is still on the horizon — no specific date committed. Always check the official docs for current status.
+> Speaker Notes: The roadmap shows steady progress. Monthly updates are published in the Gradle newsletter. We're in EAP3 now. Stable is still on the horizon - no specific date committed.
 
 ---
 
@@ -1407,6 +1408,27 @@ androidLibrary {
 ```
 
 > Speaker Notes: This is what the output looks like in practice. The module is classified as Ready - zero hard blockers. The only action item is a Warning: kotlinOptions should be derived from jdkVersion in settings defaults. Notice the generated DCL uses version catalog references (libs.okhttp) instead of raw strings. Most leaf modules in well-maintained projects will be Ready or Nearly Ready.
+
+---
+
+# Yes, You Can Use This
+
+<div style="text-align:center; margin:20px 0;">
+<div style="background:#1e1e2e; border:2px solid rgba(61,220,132,0.5); border-radius:12px; padding:24px 36px; display:inline-block; max-width:750px;">
+<p style="font-size:1.3em; margin:0 0 12px 0;">🤖 + 🐘 = ❤️</p>
+<p style="font-size:1.1em; margin:0 0 16px 0;">The AI migration skill shown in this talk is <strong style="color:#3DDC84;">open source</strong> and included in this presentation's repo.</p>
+<p style="font-size:0.85em; margin:0; color:#ccc;">Drop them into your project and go.</p>
+</div>
+</div>
+
+| File | Works With |
+|---|---|
+| `.windsurf/workflows/migrate-to-dcl.md` | Windsurf (Cascade) |
+| `.claude/commands/dcl-migration-check.md` | Claude Code |
+
+<p style="text-align:center; margin-top:16px; font-size:0.85em;"><strong style="color:#00c9db;">github.com/cof-sandbox/gradle-dcl-droidcon-2026</strong></p>
+
+> Speaker Notes: The AI migration skill I just showed you is in the same GitHub repo as these slides. There are two versions, one for Windsurf and one for Claude Code. Clone the repo or download the appropriate file into your project, and run it against your build files. If you're on a different AI coding assistant, the markdown is self-explanatory enough to adapt.
 
 ---
 
