@@ -907,7 +907,7 @@ You can stop at any point. Each step improves your build independently.
 // Zero violations? Ready to migrate.
 ```
 
-> Speaker Notes: These are the hard-won lessons. The most common mistake is trying to migrate your app module first - it always has the most custom logic, signing configs, build types, flavor dimensions. Start with the boring utility modules. Get confidence. Build muscle memory. Then tackle the complex ones.
+> Speaker Notes: These are things that consistently trip teams up. The most common mistake is trying to migrate your app module first - it always has the most custom logic, signing configs, build types, flavor dimensions. Start with the boring utility modules. Get confidence. Build muscle memory. Then tackle the complex ones.
 
 ---
 
@@ -1169,22 +1169,22 @@ graph TD
 
 # DCL Status and Compatibility Matrix
 
-| Component | Status (as of EAP3, April 2025) |
+| Component | Status (check docs for latest) |
 |---|---|
 | DCL file format (`.gradle.dcl`) | ✅ Experimental |
 | Android ecosystem plugin | ✅ Prototype available |
 | Kotlin ecosystem plugin | ✅ Prototype available |
 | Java ecosystem plugin | ✅ Prototype available |
 | `gradle init` with DCL | ✅ Available (Gradle 8.12+) |
-| Android Studio support | ✅ Nightly builds |
-| IntelliJ IDEA support | ✅ 2025.2 EAP |
+| Android Studio support | ✅ Available |
+| IntelliJ IDEA support | ✅ Available |
 | VS Code extension | ✅ Available |
 | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px; border-left:3px solid #ef4444;">Production readiness</span> | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px;">❌ <strong style="color:#ef4444;">Not yet</strong></span> |
 | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px; border-left:3px solid #ef4444;">Plugin author adoption</span> | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px;">❌ <strong style="color:#ef4444;">Not yet</strong></span> |
 
 <small>*"Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers."* - Official docs</small>
 
-> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] I want to draw your eyes to the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. Read the quote at the bottom. That's straight from Gradle's official docs. I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
+> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] Focus on the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. Read the quote at the bottom. That's straight from Gradle's official docs. I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
 
 ---
 
@@ -1201,7 +1201,7 @@ graph TD
 </div>
 
 
-> Speaker Notes: The roadmap shows steady progress. Monthly updates are published in the Gradle newsletter. We're in EAP3 now. Stable is still on the horizon - no specific date committed.
+> Speaker Notes: The roadmap shows steady progress. Updates are published in the Gradle newsletter. Stable is still on the horizon — no specific date committed. Always check the official docs for current status.
 
 ---
 
