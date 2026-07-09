@@ -51,7 +51,7 @@ DroidCon Orlando | July 2026
 <div style="position:relative; margin-bottom:0;"><span style="position:absolute; left:-38px; top:3px; font-size:0.75em;">🌴</span> <strong style="color:#fff;">Resources & Q&A</strong></div>
 </div>
 
-> Speaker Notes: Here's our roadmap for the next 30-35 minutes. We'll cover the what, why, how, and finish with practical migration advice including AI tooling. [AUDIENCE] Quick show of hands - how many of you have more than 10 modules in your Android project? More than 50? More than 500? Ok great - this talk is for all of you, but the pain scales with module count.
+> Speaker Notes: Here's our roadmap for the next 30-35 minutes. We'll start with what Declarative Gradle actually is and why you should care. Then we'll look at the Android experience today - the problem we're solving. From there, real DCL syntax and examples, Isolated Projects, the migration path and common pitfalls, plugin authoring, AI-assisted migration tooling, and we'll wrap up with resources and Q&A. [AUDIENCE] Quick show of hands - how many of you have more than 10 modules in your Android project? More than 50? More than 500? Ok great - this talk is for all of you, but the pain scales with module count.
 
 ---
 
@@ -311,7 +311,7 @@ android {
 | `allprojects`/`subprojects` cause coupling | Software Types + defaults in settings |
 | Plugin conflicts and ordering issues | Controlled, typed plugin application |
 
-> Speaker Notes: [PACING: Give 3 seconds for the audience to scan the table, then anchor on row 2.] Quick note on row 2 — IDE import is slow and fragile. How many of you have waited 3+ minutes for a Gradle sync after touching a build file? That's because Gradle has to evaluate every build script sequentially just to understand your project structure. DCL eliminates that by being statically analyzable. The IDE can understand your project without executing anything. The other rows follow the same pattern: today's pain point on the left, DCL's structural fix on the right. [TRANSITION: The enterprise version of this story is even more compelling.]
+> Speaker Notes: [PACING: Give 3 seconds for the audience to scan the table, then anchor on row 2.] Quick note on row 2 - IDE import is slow and fragile. How many of you have waited 3+ minutes for a Gradle sync after touching a build file? That's because Gradle has to evaluate every build script sequentially just to understand your project structure. DCL eliminates that by being statically analyzable. The IDE can understand your project without executing anything. The other rows follow the same pattern: today's pain point on the left, DCL's structural fix on the right. [TRANSITION: The enterprise version of this story is even more compelling.]
 
 ---
 
@@ -382,7 +382,7 @@ DCL files are isolated by design → Gradle can configure all projects **in para
 
 DCL only affects the **configuration phase**. Compilation, testing, APK packaging - all unchanged.
 
-> Speaker Notes: [PACING: The green pulsing segment draws the eye immediately. Give 2 seconds, then explain.] Important to set expectations here. Look at the green segment - that's the ONLY part DCL speeds up. Configuration. The phase where Gradle reads your build files and figures out what to do. It does NOT make your Kotlin compiler faster, your tests run quicker, or your APK build smaller. For small projects where config is 2 seconds, you won't notice. For enterprise with 2500 modules where config is 4+ minutes, it changes everything. The execution phase is already parallelized by Gradle - DCL brings that same parallelism to configuration.
+> Speaker Notes: [PACING: The green pulsing segment draws the eye immediately. Give 2 seconds, then explain.] Important to set expectations here. Look at the green segment - that's the ONLY part DCL speeds up. Configuration. The phase where Gradle reads your build files and figures out what to do. It does NOT make your Kotlin compiler faster, your tests run quicker, or your APK build smaller. For small projects where config is 2 seconds, you won't notice. For enterprise with 2500 modules where config is 4+ minutes, that's a significant improvement. The execution phase is already parallelized by Gradle - DCL brings that same parallelism to configuration.
 
 ---
 
@@ -495,7 +495,7 @@ abstract class AndroidLibrarySoftwareType {
 }
 ```
 
-> Speaker Notes: [PACING: Give 3-4 seconds for the two definition boxes, then walk through the code.] Software Types are the core concept. Look at those two boxes at the top and the arrow between them. A convention plugin is imperative Kotlin code that runs at configuration time - applies plugins, sets properties, wires tasks. You write these today. A Software Type wraps that convention plugin and also exposes a typed, declarative API on top. The convention plugin doesn't disappear - it becomes the implementation layer inside the Software Type. What changes? First, convention plugins live in buildSrc or an included build and consumers still write Kotlin. Software Types mean consumers write pure declarative config instead. Second, convention plugins can conflict with each other since any plugin can override what another set. Software Types enforce one per project with no overlap. And third, tools cannot safely modify a KTS file that applies convention plugins, but they CAN safely modify a .dcl file because the schema is known. If you already have convention plugins, you are 80% of the way there. The migration is: formalize that logic into the Software Type API. [TRANSITION: Let's look at what the settings file looks like in DCL.]
+> Speaker Notes: [PACING: Give 3-4 seconds for the two definition boxes, then walk through the code.] And this is how I like to think about Software Types and convention plugins. Software Types are the core concept. Look at those two boxes at the top and the arrow between them. A convention plugin is imperative Kotlin code that runs at configuration time - applies plugins, sets properties, wires tasks. You write these today. A Software Type wraps that convention plugin and also exposes a typed, declarative API on top. The convention plugin doesn't disappear - it becomes the implementation layer inside the Software Type. What changes? First, convention plugins live in buildSrc or an included build and consumers still write Kotlin. Software Types mean consumers write pure declarative config instead. Second, convention plugins can conflict with each other since any plugin can override what another set. Software Types enforce one per project with no overlap. And third, tools cannot safely modify a KTS file that applies convention plugins, but they CAN safely modify a .dcl file because the schema is known. If you already have convention plugins, you are 80% of the way there. The migration is: formalize that logic into the Software Type API. [TRANSITION: Let's look at what the settings file looks like in DCL.]
 
 ---
 
@@ -632,7 +632,7 @@ defaults {
     - `gradle.declarative.ide.support`
 5. Restart
 
-> Speaker Notes: If you want to try this today, here's how. It's a nightly build requirement for now, but the flags are there and it works with the sample projects. [PACING: Pause 5-6 seconds here. Say "I'll leave this up for a moment if anyone wants to take a photo." Scan the room, let people snap pictures. This is an actionable takeaway slide, don't rush past it.]
+> Speaker Notes: If you want to try this today, here's how. It's a nightly build requirement for now, but the flags are there and it works with the sample projects. [PACING: Pause 5-6 seconds here.] I'll leave this up for a moment, the slides are available online if anyone needs to reference these flags later.
 
 ---
 
@@ -769,7 +769,7 @@ BUILD SUCCESSFUL with 3 isolation violations
 
 **Takeaway**: Any plugin that runs imperative logic during configuration is potentially incompatible.
 
-> Speaker Notes: [PACING: This is a 7-row table. Give 4-5 seconds, then anchor.] Let me be upfront about the uncomfortable truth. Look at the right side. Lots of yellow and question marks. AGP and KGP are actively being worked on by Gradle and Google. But Hilt? SafeArgs? Firebase? Those are question marks. And look at the bottom row in bold: any plugin that runs imperative logic during configuration is potentially incompatible. If your build uses Hilt or Room, you'll need to wait for those ecosystems to adapt. [TRANSITION: If you're a plugin author yourself, here's what to do.]
+> Speaker Notes: [PACING: This is a 7-row table. Give 4-5 seconds, then anchor.] Let me be upfront about the uncomfortable truth. Look at the status column. Lots of yellow and question marks. AGP and KGP are actively being worked on by Gradle and Google. But Hilt? SafeArgs? Firebase? Those are question marks. And the key takeaway is at the bottom in bold: any plugin that runs imperative logic during configuration is potentially incompatible. If your build uses Hilt or Room, you'll need to wait for those ecosystems to adapt. [TRANSITION: If you're a plugin author yourself, here's what to do.]
 
 ---
 
@@ -777,12 +777,16 @@ BUILD SUCCESSFUL with 3 isolation violations
 
 **Things to watch for:**
 
-1. **Don't use `project.allprojects` or `project.subprojects`** in your plugin
-2. **Don't access `project.rootProject`** configuration at config time
-3. **Don't register tasks in other projects** from your plugin
-4. **Use lazy configuration APIs**: `Property<T>`, `Provider<T>`, `TaskProvider`
-5. **Consider creating a Software Type** if your plugin defines a project archetype
-6. **Test with `--isolated-projects`** to validate compatibility
+<div style="padding-left:30px; font-size:0.85em;">
+
+- <span style="color:#ef4444;">Don't</span> use `project.allprojects` or `project.subprojects` in your plugin
+- <span style="color:#ef4444;">Don't</span> access `project.rootProject` configuration at config time
+- <span style="color:#ef4444;">Don't</span> register tasks in other projects from your plugin
+- <span style="color:#3DDC84;">Do</span> use lazy configuration APIs: `Property<T>`, `Provider<T>`, `TaskProvider`
+- <span style="color:#3DDC84;">Do</span> consider creating a Software Type if your plugin defines a project archetype
+- <span style="color:#3DDC84;">Do</span> test with `--isolated-projects` to validate compatibility
+
+</div>
 
 ```kotlin
 // ❌ Eager, cross-project
@@ -913,7 +917,7 @@ You can stop at any point. Each step improves your build independently.
 // Zero violations? Ready to migrate.
 ```
 
-> Speaker Notes: These are things that consistently trip teams up. The most common mistake is trying to migrate your app module first - it always has the most custom logic, signing configs, build types, flavor dimensions. Start with the boring utility modules. Get confidence. Build muscle memory. Then tackle the complex ones.
+> Speaker Notes: These are the hard-won lessons. The most common mistake is trying to migrate your app module first - it always has the most custom logic, signing configs, build types, flavor dimensions. Start with the boring utility modules. Get confidence. Build muscle memory. Then tackle the complex ones.
 
 ---
 
@@ -1164,7 +1168,7 @@ graph TD
 - Build cache: unchanged
 - Artifact output paths: unchanged
 
-> Speaker Notes: If you manage CI infrastructure, this one matters. Your Jenkins, GitHub Actions, or Bitrise pipelines don't need a single change. DCL only affects how projects are configured, not how tasks are invoked or executed. The build outputs are identical. The cache keys are identical. The only thing that changes is the file extension of your build scripts. If you have scripts that parse build.gradle.kts files directly, those need updating - but that's rare.
+> Speaker Notes: If you manage CI infrastructure, your Jenkins, GitHub Actions, or Bitrise pipelines don't need a single change. DCL only affects how projects are configured, not how tasks are invoked or executed. The build outputs are identical. The cache keys are identical. The only thing that changes is the file extension of your build scripts. If you have scripts that parse build.gradle.kts files directly, those need updating - but that's rare.
 
 ---
 
@@ -1183,9 +1187,11 @@ graph TD
 | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px; border-left:3px solid #ef4444;">Production readiness</span> | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px;">❌ <strong style="color:#ef4444;">Not yet</strong></span> |
 | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px; border-left:3px solid #ef4444;">Plugin author adoption</span> | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px;">❌ <strong style="color:#ef4444;">Not yet</strong></span> |
 
-<small>*"Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers."* - Official docs</small>
+<div style="margin-top:8px; padding:8px 16px; border-left:3px solid #f5a623; background:rgba(245,166,35,0.06); border-radius:0 6px 6px 0;">
+<p style="font-size:0.72em; font-style:italic; margin:0;">"Declarative Gradle is <strong>ready</strong> for trying out our provided sample projects. Declarative Gradle is <strong style='color:#ef4444;'>not ready</strong> for adoption by plugin authors, build engineers or software engineers."<span style="color:#f5a623;"> - Official docs</span></p>
+</div>
 
-> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] I want to draw your eyes to the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. Read the quote at the bottom. That's straight from Gradle's official docs. I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
+> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] I want to draw your eyes to the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. And I want to read the quote at the bottom. Straight from Gradle's official docs: "Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers." I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
 
 ---
 
@@ -1206,6 +1212,27 @@ graph TD
 
 ---
 
+# How AI Can Help
+
+<div style="text-align:center; margin:20px 0;">
+<div style="background:#1e1e2e; border:2px solid rgba(61,220,132,0.5); border-radius:12px; padding:24px 36px; display:inline-block; max-width:750px;">
+<p style="font-size:1.3em; margin:0 0 12px 0;">🤖 + 🐘 = ❤️</p>
+<p style="font-size:1.1em; margin:0 0 16px 0;">There is an <strong style="color:#3DDC84;">open-source</strong> AI migration skill included in this presentation's repo.</p>
+<p style="font-size:0.85em; margin:0; color:#ccc;">Drop it into your project and go.</p>
+</div>
+</div>
+
+| File | Works With |
+|---|---|
+| `.windsurf/workflows/migrate-to-dcl.md` | Windsurf (Cascade) |
+| `.claude/commands/dcl-migration-check.md` | Claude Code |
+
+<p style="text-align:center; margin-top:16px; font-size:0.85em;"><strong style="color:#00c9db;">github.com/cof-sandbox/gradle-dcl-droidcon-2026</strong></p>
+
+> Speaker Notes: Before I walk through the details, I want to highlight that there's an open-source AI migration skill in the same GitHub repo as these slides. Two versions, one for Windsurf and one for Claude Code. You can clone the repo, drop the file into your project, and run it against your build files. If you're on a different AI coding assistant, the markdown is self-explanatory enough to adapt.
+
+---
+
 # AI-Assisted Migration: The Opportunity
 
 **Problem**: Migrating hundreds or thousands of modules manually is not feasible.
@@ -1222,7 +1249,7 @@ graph TD
 
 </div>
 
-> Speaker Notes: This is where it gets interesting. At Capital One, we have thousands of modules. Manual migration is not realistic. AI coding assistants can speed this up significantly.
+> Speaker Notes: At Capital One, we have thousands of modules. Manual migration is not realistic. So what can AI tooling do? A few things. Analyze your current build files for DCL readiness - are they simple enough to convert? Identify Isolated Projects violations - the cross-project patterns that block you. Generate equivalent DCL configurations from your existing KTS files. Scaffold custom Software Types based on what your convention plugins already do. And detect incompatible plugin patterns like afterEvaluate or rootProject access.
 
 ---
 
@@ -1411,27 +1438,6 @@ androidLibrary {
 
 ---
 
-# Yes, You Can Use This
-
-<div style="text-align:center; margin:20px 0;">
-<div style="background:#1e1e2e; border:2px solid rgba(61,220,132,0.5); border-radius:12px; padding:24px 36px; display:inline-block; max-width:750px;">
-<p style="font-size:1.3em; margin:0 0 12px 0;">🤖 + 🐘 = ❤️</p>
-<p style="font-size:1.1em; margin:0 0 16px 0;">The AI migration skill shown in this talk is <strong style="color:#3DDC84;">open source</strong> and included in this presentation's repo.</p>
-<p style="font-size:0.85em; margin:0; color:#ccc;">Drop them into your project and go.</p>
-</div>
-</div>
-
-| File | Works With |
-|---|---|
-| `.windsurf/workflows/migrate-to-dcl.md` | Windsurf (Cascade) |
-| `.claude/commands/dcl-migration-check.md` | Claude Code |
-
-<p style="text-align:center; margin-top:16px; font-size:0.85em;"><strong style="color:#00c9db;">github.com/wildsmith/droidcon-2026</strong></p>
-
-> Speaker Notes: The AI migration skill I just showed you is in the same GitHub repo as these slides. There are two versions, one for Windsurf and one for Claude Code. Clone the repo or download the appropriate file into your project, and run it against your build files. If you're on a different AI coding assistant, the markdown is self-explanatory enough to adapt.
-
----
-
 # Try It: `gradle init` with DCL
 
 <div style="font-size:1.2em;">
@@ -1439,7 +1445,7 @@ androidLibrary {
 ```bash
 # Generate a new Android project with DCL (Gradle 8.12+)
 gradle init \
-  -Dorg.gradle.buildinit.specs=org.gradle.experimental.android-ecosystem-init:0.1.40
+  -Dorg.gradle.buildinit.specs=org.gradle.experimental.android-ecosystem-init:0.1.44
 
 # You will be asked:
 # "Additional project types were loaded. 
@@ -1607,7 +1613,7 @@ cd declarative-samples-android-app
 | Gradle Slack | `#declarative_gradle` channel |
 | Gradle Newsletter | [newsletter.gradle.org](https://newsletter.gradle.org/) |
 
-> Speaker Notes: [PACING: This is a reference slide. Don't read it row by row. Give 5 seconds then guide.] I'll leave this up for a moment, feel free to photograph it. If you only bookmark two things: the migration guide and the Gradle Slack channel. The migration guide walks through a real project conversion step by step. The Slack channel, #declarative_gradle, is where the Gradle team actively answers questions. The DroidCon NYC 2024 talk by Sterling Greene is also excellent if you want a deeper technical dive from the Gradle team's perspective. [TRANSITION: And with that, let's open it up.]
+> Speaker Notes: [PACING: This is a reference slide. Don't read it row by row. Give 5 seconds then guide.] These links are all in the slides, which are available in the GitHub repo. If you only bookmark two things: the migration guide and the Gradle Slack channel. The migration guide walks through a real project conversion step by step. The Slack channel, #declarative_gradle, is where the Gradle team actively answers questions. The DroidCon NYC 2024 talk on Declarative Gradle on Android is also excellent if you want a deeper technical dive from the Gradle team's perspective. [TRANSITION: And with that, let's open it up.]
 
 ---
 
@@ -1623,7 +1629,7 @@ cd declarative-samples-android-app
 
 *Questions?*
 
-> Speaker Notes: Open the floor for Q&A. Common questions to prepare for: "When will this be production ready?" (no firm date), "Does this replace Kotlin DSL?" (eventually, but KTS remains supported), "What about Groovy?" (DCL is separate from both Groovy and KTS). All resource links are available in the presentation slides.
+> Speaker Notes: I want to thank folks for attending this presentation and would like to open the floor for Q&A. All resource links are available in the presentation slides and the GitHub repo. [REFERENCE - don't read these, but have answers ready: "When will this be production ready?" - no firm date. "Does this replace Kotlin DSL?" - eventually, but KTS remains supported. "What about Groovy?" - DCL is separate from both Groovy and KTS.]
 
 ---
 
