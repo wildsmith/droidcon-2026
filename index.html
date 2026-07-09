@@ -843,6 +843,9 @@
                      data-separator-notes="^> Speaker Notes:">
             </section>
         </div>
+
+        <!-- Tap the bottom left corner of the screen to open Speaker Notes -->
+        <div style="position: fixed; bottom: 0; left: 0; width: 100px; height: 100px; z-index: 9999;" onclick="Reveal.getPlugin('notes').open()"></div>
     </div>
 
     <!-- highlight.js core + languages loaded BEFORE Reveal plugin so it uses the global hljs -->
