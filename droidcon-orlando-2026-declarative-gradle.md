@@ -281,7 +281,7 @@ android {
 
 - Backed by Gradle Inc. - actively developed with monthly updates
 
-> Speaker Notes: So, what IS Declarative Gradle? It's Gradle's initiative to create a clear separation between what your project IS versus how it gets built. The DCL language is a restricted subset of Kotlin - no arbitrary code, no imperative logic, just pure configuration. Status changes frequently. Check the Gradle newsletter or declarative.gradle.org for the latest details.
+> Speaker Notes: So, what is Declarative Gradle? It's Gradle's initiative to create a clear separation between what your project is versus how it gets built. The DCL language is a restricted subset of Kotlin - no arbitrary code, no imperative logic, just pure configuration. Status changes frequently. Check the Gradle newsletter or declarative.gradle.org for the latest details.
 
 ---
 
@@ -769,7 +769,7 @@ BUILD SUCCESSFUL with 3 isolation violations
 
 **Takeaway**: Any plugin that runs imperative logic during configuration is potentially incompatible.
 
-> Speaker Notes: [PACING: This is a 7-row table. Give 4-5 seconds, then anchor.] Look at the status column. Lots of yellow and question marks. AGP and KGP are actively being worked on by Gradle and Google. But Hilt? SafeArgs? Firebase? Those are question marks. And the key takeaway is at the bottom in bold: any plugin that runs imperative logic during configuration is potentially incompatible. If your build uses Hilt or Room, you'll need to wait for those ecosystems to adapt. [TRANSITION: If you're a plugin author yourself, here's what to do.]
+> Speaker Notes: [PACING: This is a 7-row table. Give 4-5 seconds, then anchor.] These are some of the Plugin compatibility challenges. Look at the status column. Lots of yellow and question marks. AGP and KGP are actively being worked on by Gradle and Google. But Hilt? SafeArgs? Firebase? Those are question marks. And the key takeaway is at the bottom in bold: any plugin that runs imperative logic during configuration is potentially incompatible. If your build uses Hilt or Room, you'll need to wait for those ecosystems to adapt. [TRANSITION: If you're a plugin author yourself, here's what to do.]
 
 ---
 
@@ -1191,7 +1191,7 @@ graph TD
 <p style="font-size:0.72em; font-style:italic; margin:0;">"Declarative Gradle is <strong>ready</strong> for trying out our provided sample projects. Declarative Gradle is <strong style='color:#ef4444;'>not ready</strong> for adoption by plugin authors, build engineers or software engineers."<span style="color:#f5a623;"> - Official docs</span></p>
 </div>
 
-> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] Look at the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. And the quote at the bottom is worth reading out loud. Straight from Gradle's official docs: "Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers." I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
+> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] Look at the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. Gradle's official docs state: "Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers." I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
 
 ---
 
@@ -1249,7 +1249,7 @@ graph TD
 
 </div>
 
-> Speaker Notes: AI-assisted migration - the opportunity. At Capital One, we have thousands of modules. Manual migration is not realistic. So what can AI tooling do? A few things. Analyze your current build files for DCL readiness - are they simple enough to convert? Identify Isolated Projects violations - the cross-project patterns that block you. Generate equivalent DCL configurations from your existing KTS files. Scaffold custom Software Types based on what your convention plugins already do. And detect incompatible plugin patterns like afterEvaluate or rootProject access.
+> Speaker Notes: At Capital One, we have thousands of modules. Manual migration is not realistic. So what can AI tooling do? A few things. Analyze your current build files for DCL readiness - are they simple enough to convert? Identify Isolated Projects violations - the cross-project patterns that block you. Generate equivalent DCL configurations from your existing KTS files. Scaffold custom Software Types based on what your convention plugins already do. And detect incompatible plugin patterns like afterEvaluate or rootProject access.
 
 ---
 
