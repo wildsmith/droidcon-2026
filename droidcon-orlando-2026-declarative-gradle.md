@@ -281,7 +281,7 @@ android {
 
 - Backed by Gradle Inc. - actively developed with monthly updates
 
-> Speaker Notes: Declarative Gradle is Gradle's initiative to create a clear separation between what your project IS versus how it gets built. The DCL language is a restricted subset of Kotlin - no arbitrary code, no imperative logic, just pure configuration. Status changes frequently. Check the Gradle newsletter or declarative.gradle.org for the latest details.
+> Speaker Notes: So, what IS Declarative Gradle? It's Gradle's initiative to create a clear separation between what your project IS versus how it gets built. The DCL language is a restricted subset of Kotlin - no arbitrary code, no imperative logic, just pure configuration. Status changes frequently. Check the Gradle newsletter or declarative.gradle.org for the latest details.
 
 ---
 
@@ -311,7 +311,7 @@ android {
 | `allprojects`/`subprojects` cause coupling | Software Types + defaults in settings |
 | Plugin conflicts and ordering issues | Controlled, typed plugin application |
 
-> Speaker Notes: [PACING: Give 3 seconds for the audience to scan the table, then anchor on row 2.] Quick note on row 2 - IDE import is slow and fragile. How many of you have waited 3+ minutes for a Gradle sync after touching a build file? That's because Gradle has to evaluate every build script sequentially just to understand your project structure. DCL eliminates that by being statically analyzable. The IDE can understand your project without executing anything. The other rows follow the same pattern: today's pain point on the left, DCL's structural fix on the right. [TRANSITION: The enterprise version of this story is even more compelling.]
+> Speaker Notes: [PACING: Give 3 seconds for the audience to scan the table, then anchor on row 2.] Why should you migrate? Quick note on row 2 - IDE import is slow and fragile. How many of you have waited 3+ minutes for a Gradle sync after touching a build file? That's because Gradle has to evaluate every build script sequentially just to understand your project structure. DCL eliminates that by being statically analyzable. The IDE can understand your project without executing anything. The other rows follow the same pattern: today's pain point on the left, DCL's structural fix on the right. [TRANSITION: The enterprise version of this story is even more compelling.]
 
 ---
 
@@ -361,7 +361,7 @@ android {
 
 DCL files are isolated by design → Gradle can configure all projects **in parallel**.
 
-> Speaker Notes: [PACING: Let the table land for 3 seconds. The numbers speak for themselves.] Focus on that bottom row. 2,500 modules. 4.5 minutes of configuration time today, just to figure out what to build. With parallel configuration enabled by DCL: 8 seconds. That's a 34x improvement. Now, important caveat, I have it in the footnote: these are theoretical maximums. Real-world numbers will be lower. But even a 5-10x improvement at this scale changes how your team works. [TRANSITION: But I want to be honest about what DCL does NOT speed up.]
+> Speaker Notes: [PACING: Let the table land for 3 seconds. The numbers speak for themselves.] The configuration time problem. Focus on that bottom row. 2,500 modules. 4.5 minutes of configuration time today, just to figure out what to build. With parallel configuration enabled by DCL: 8 seconds. That's a 34x improvement. Now, important caveat, I have it in the footnote: these are theoretical maximums. Real-world numbers will be lower. But even a 5-10x improvement at this scale changes how your team works. [TRANSITION: But it's worth being clear about what DCL does NOT speed up.]
 
 ---
 
@@ -495,7 +495,7 @@ abstract class AndroidLibrarySoftwareType {
 }
 ```
 
-> Speaker Notes: [PACING: Give 3-4 seconds for the two definition boxes, then walk through the code.] And this is how I like to think about Software Types and convention plugins. Software Types are the core concept. Look at those two boxes at the top and the arrow between them. A convention plugin is imperative Kotlin code that runs at configuration time - applies plugins, sets properties, wires tasks. You write these today. A Software Type wraps that convention plugin and also exposes a typed, declarative API on top. The convention plugin doesn't disappear - it becomes the implementation layer inside the Software Type. What changes? First, convention plugins live in buildSrc or an included build and consumers still write Kotlin. Software Types mean consumers write pure declarative config instead. Second, convention plugins can conflict with each other since any plugin can override what another set. Software Types enforce one per project with no overlap. And third, tools cannot safely modify a KTS file that applies convention plugins, but they CAN safely modify a .dcl file because the schema is known. If you already have convention plugins, you are 80% of the way there. The migration is: formalize that logic into the Software Type API. [TRANSITION: Let's look at what the settings file looks like in DCL.]
+> Speaker Notes: [PACING: Give 3-4 seconds for the two definition boxes, then walk through the code.] Software Types explained - and this is how I like to think about Software Types and convention plugins. They're the core concept. Look at those two boxes at the top and the arrow between them. A convention plugin is imperative Kotlin code that runs at configuration time - applies plugins, sets properties, wires tasks. You write these today. A Software Type wraps that convention plugin and also exposes a typed, declarative API on top. The convention plugin doesn't disappear - it becomes the implementation layer inside the Software Type. What changes? First, convention plugins live in buildSrc or an included build and consumers still write Kotlin. Software Types mean consumers write pure declarative config instead. Second, convention plugins can conflict with each other since any plugin can override what another set. Software Types enforce one per project with no overlap. And third, tools cannot safely modify a KTS file that applies convention plugins, but they CAN safely modify a .dcl file because the schema is known. If you already have convention plugins, you are 80% of the way there. The migration is: formalize that logic into the Software Type API. You might be thinking, "Can I compose Software Types? Can I wrap AGP's androidLibrary inside my own?" - Each project gets exactly one Software Type, so you can't nest them. But you don't need to. Your custom Software Type's implementation layer is still full Kotlin - it can call AGP APIs directly, just like your convention plugins do today. The android extension doesn't disappear, it just moves behind the curtain. Developers write capitalOneAndroidLibrary {} in DCL, and your implementation wires up AGP under the hood. For modular add-ons, that's what Project Features are for. [TRANSITION: Let's look at what the settings file looks like in DCL.]
 
 ---
 
@@ -600,7 +600,7 @@ defaults {
 </div>
 </div>
 
-> Speaker Notes: [PACING: 3 seconds for the visual contrast to land.] This is why IDE support matters. Left side: to understand a KTS file, your IDE must fully evaluate it. Execute the Kotlin, resolve plugins dynamically, figure out what schema the android block even has. It can't predict conditional logic or afterEvaluate side effects. It needs to evaluate other projects if there's cross-project access. That's why Gradle sync is slow. Right side: DCL. The schema is known statically from the Software Type definition. The IDE never needs to execute anything. It knows every valid property, every valid nested block, instantly. That's why completion is perfect and sync is fast. [TRANSITION: And this isn't hypothetical. IDE support exists today.]
+> Speaker Notes: [PACING: 3 seconds for the visual contrast to land.] What your IDE sees - this is why IDE support matters. Left side: to understand a KTS file, your IDE must fully evaluate it. Execute the Kotlin, resolve plugins dynamically, figure out what schema the android block even has. It can't predict conditional logic or afterEvaluate side effects. It needs to evaluate other projects if there's cross-project access. That's why Gradle sync is slow. Right side: DCL. The schema is known statically from the Software Type definition. The IDE never needs to execute anything. It knows every valid property, every valid nested block, instantly. That's why completion is perfect and sync is fast. [TRANSITION: And this isn't hypothetical. IDE support exists today.]
 
 ---
 
@@ -632,7 +632,7 @@ defaults {
     - `gradle.declarative.ide.support`
 5. Restart
 
-> Speaker Notes: If you want to try this today, here's how. It's a nightly build requirement for now, but the flags are there and it works with the sample projects. [PACING: Pause 5-6 seconds here.] I'll leave this up for a moment, the slides are available online if anyone needs to reference these flags later.
+> Speaker Notes: Enabling DCL in Android Studio. If you want to try this today, here's how. It's a nightly build requirement for now, but the flags are there and it works with the sample projects. [PACING: Pause 5-6 seconds here.] I'll leave this up for a moment, the slides are available online if anyone needs to reference these flags later.
 
 ---
 
@@ -672,7 +672,7 @@ org.gradle.unsafe.isolated-projects=true
 ```
 
 
-> Speaker Notes: Isolated Projects is a separate but closely related feature. It's the enforcement mechanism that prevents cross-project access. DCL builds are inherently isolated because you can't write imperative code that reaches into other projects. [AUDIENCE] Has anyone here actually tried running --isolated-projects on their build? If you have, you know what's coming next.
+> Speaker Notes: What about Isolated Projects? It's a separate but closely related feature. It's the enforcement mechanism that prevents cross-project access. DCL builds are inherently isolated because you can't write imperative code that reaches into other projects. [AUDIENCE] Has anyone here actually tried running --isolated-projects on their build? If you have, you know what's coming next.
 
 ---
 
@@ -751,7 +751,7 @@ BUILD SUCCESSFUL with 3 isolation violations
 4. **buildSrc with project-level logic** - Anything that evaluates at config time
 5. **Third-party plugins using `project.rootProject`** - Very common
 
-> Speaker Notes: Let's be honest about the current state. Most non-trivial Android projects use at least one of these patterns. The migration isn't going to happen overnight, and that's okay. Gradle is providing a path forward. [AUDIENCE] Raise your hand if your project uses allprojects or subprojects. Yeah... that's everyone.
+> Speaker Notes: Most non-trivial Android projects use at least one of these patterns. The migration isn't going to happen overnight, and that's okay. Gradle is providing a path forward. [AUDIENCE] Raise your hand if your project uses allprojects or subprojects. Yeah... that's everyone.
 
 ---
 
@@ -769,7 +769,7 @@ BUILD SUCCESSFUL with 3 isolation violations
 
 **Takeaway**: Any plugin that runs imperative logic during configuration is potentially incompatible.
 
-> Speaker Notes: [PACING: This is a 7-row table. Give 4-5 seconds, then anchor.] Let me be upfront about the uncomfortable truth. Look at the status column. Lots of yellow and question marks. AGP and KGP are actively being worked on by Gradle and Google. But Hilt? SafeArgs? Firebase? Those are question marks. And the key takeaway is at the bottom in bold: any plugin that runs imperative logic during configuration is potentially incompatible. If your build uses Hilt or Room, you'll need to wait for those ecosystems to adapt. [TRANSITION: If you're a plugin author yourself, here's what to do.]
+> Speaker Notes: [PACING: This is a 7-row table. Give 4-5 seconds, then anchor.] Look at the status column. Lots of yellow and question marks. AGP and KGP are actively being worked on by Gradle and Google. But Hilt? SafeArgs? Firebase? Those are question marks. And the key takeaway is at the bottom in bold: any plugin that runs imperative logic during configuration is potentially incompatible. If your build uses Hilt or Room, you'll need to wait for those ecosystems to adapt. [TRANSITION: If you're a plugin author yourself, here's what to do.]
 
 ---
 
@@ -877,7 +877,7 @@ androidLibrary {
 
 You can stop at any point. Each step improves your build independently.
 
-> Speaker Notes: This is the big picture. Every step provides standalone value. Fixing isolated projects violations makes your build faster today. Converting settings to DCL centralizes your defaults today. You don't need to go all the way to get benefits.
+> Speaker Notes: Migration journey overview. Every step provides standalone value. Fixing isolated projects violations makes your build faster today. Converting settings to DCL centralizes your defaults today. You don't need to go all the way to get benefits.
 
 ---
 
@@ -917,7 +917,7 @@ You can stop at any point. Each step improves your build independently.
 // Zero violations? Ready to migrate.
 ```
 
-> Speaker Notes: These are the hard-won lessons. The most common mistake is trying to migrate your app module first - it always has the most custom logic, signing configs, build types, flavor dimensions. Start with the boring utility modules. Get confidence. Build muscle memory. Then tackle the complex ones.
+> Speaker Notes: The most common mistake is trying to migrate your app module first - it always has the most custom logic, signing configs, build types, flavor dimensions. Start with the boring utility modules. Get confidence. Build muscle memory. Then tackle the complex ones.
 
 ---
 
@@ -1191,7 +1191,7 @@ graph TD
 <p style="font-size:0.72em; font-style:italic; margin:0;">"Declarative Gradle is <strong>ready</strong> for trying out our provided sample projects. Declarative Gradle is <strong style='color:#ef4444;'>not ready</strong> for adoption by plugin authors, build engineers or software engineers."<span style="color:#f5a623;"> - Official docs</span></p>
 </div>
 
-> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] I want to draw your eyes to the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. And I want to read the quote at the bottom. Straight from Gradle's official docs: "Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers." I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
+> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] Look at the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. And the quote at the bottom is worth reading out loud. Straight from Gradle's official docs: "Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers." I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
 
 ---
 
@@ -1249,7 +1249,7 @@ graph TD
 
 </div>
 
-> Speaker Notes: At Capital One, we have thousands of modules. Manual migration is not realistic. So what can AI tooling do? A few things. Analyze your current build files for DCL readiness - are they simple enough to convert? Identify Isolated Projects violations - the cross-project patterns that block you. Generate equivalent DCL configurations from your existing KTS files. Scaffold custom Software Types based on what your convention plugins already do. And detect incompatible plugin patterns like afterEvaluate or rootProject access.
+> Speaker Notes: AI-assisted migration - the opportunity. At Capital One, we have thousands of modules. Manual migration is not realistic. So what can AI tooling do? A few things. Analyze your current build files for DCL readiness - are they simple enough to convert? Identify Isolated Projects violations - the cross-project patterns that block you. Generate equivalent DCL configurations from your existing KTS files. Scaffold custom Software Types based on what your convention plugins already do. And detect incompatible plugin patterns like afterEvaluate or rootProject access.
 
 ---
 
@@ -1489,7 +1489,7 @@ cd declarative-samples-android-app
 5. **Subscribe to [Gradle newsletter](https://newsletter.gradle.org/)** for monthly DCL updates
 6. **Provide feedback** - [github.com/gradle/declarative-gradle](https://github.com/gradle/declarative-gradle/blob/main/docs/feedback.md)
 
-> Speaker Notes: You don't have to wait for DCL to be stable to start preparing. Running isolated projects analysis today will surface problems. Removing allprojects/subprojects is good hygiene regardless. Start with the easy wins.
+> Speaker Notes: What to do today. You don't have to wait for DCL to be stable to start preparing. Running isolated projects analysis today will surface problems. Removing allprojects/subprojects is good hygiene regardless. Start with the easy wins.
 
 ---
 
@@ -1583,7 +1583,7 @@ cd declarative-samples-android-app
 - **Your CI doesn't change** - same commands, same outputs
 - **Security win** - DCL files are auditable, non-executable data
 
-> Speaker Notes: To wrap up - DCL is coming. It's not here yet for production, but the direction is clear. The best thing you can do today is prepare: eliminate cross-project patterns, test with isolated projects, and keep an eye on the EAP releases.
+> Speaker Notes: To summarize - DCL is coming. It's not here yet for production, but the direction is clear. The best thing you can do today is prepare: eliminate cross-project patterns, test with isolated projects, and keep an eye on the EAP releases.
 
 ---
 
