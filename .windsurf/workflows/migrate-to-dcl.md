@@ -10,17 +10,19 @@ Analyze Gradle build files for migration readiness to Declarative Gradle (`.grad
 
 Declarative Gradle (DCL) replaces imperative `.gradle.kts` build scripts with a restricted, statically-analyzable subset of Kotlin (`.gradle.dcl`). DCL files cannot contain arbitrary code — only typed property assignments and nested configuration blocks. Isolated Projects is a complementary Gradle feature that forbids cross-project configuration access, enabling parallel project configuration.
 
+> **Terminology (current as of Gradle 9.6):** What earlier EAPs and docs called a **"Software Type"** is now a **"Project Type"**, and a **"Software Feature"** is a **"Project Feature."** The plugin-authoring annotation `@SoftwareType` was **removed in the Gradle 9.x line** and replaced by the binding API (`@BindsProjectType` + `ProjectTypeBinding` + `Definition<T>`) in the promoted `org.gradle.features` package. This skill only generates **consumer** DCL (the `androidLibrary { }` / `androidApplication { }` blocks), which are unchanged by the rename — always use the current "Project Type" naming in reports, and treat any lingering "Software Type" wording in third-party docs as the same concept.
+
 **Key constraints of DCL files:**
 - No `if`/`when`/`for`/`while` — no conditional or iterative logic
 - No function calls (except dependency declarations and nested block accessors)
 - No `val`/`var` declarations — no local variables
 - No `ext`/`extra` properties
-- No `plugins {}` block — plugin application is handled by the Software Type
+- No `plugins {}` block — plugin application is handled by the Project Type
 - No `afterEvaluate {}`, `beforeEvaluate {}`, or lifecycle hooks
 - No `allprojects {}`, `subprojects {}`, or cross-project access
 - No custom task registration (`tasks.register {}`, `tasks.create {}`)
 - No `import` statements
-- One Software Type per project (`androidApplication`, `androidLibrary`, `javaLibrary`, `kotlinJvm`, etc.)
+- One Project Type per project (`androidApplication`, `androidLibrary`, `javaLibrary`, `kotlinJvm`, etc.)
 
 ## Options
 
@@ -71,13 +73,13 @@ If `settings.gradle.kts` contains `includeBuild()` directives:
 - Note any dependency substitution patterns (`substitution.substitute()`) — these are compatible with Isolated Projects but should be documented in the report.
 - If the project uses composite builds for plugin development, this is a *good sign* — it means build logic is already separated from build scripts, which is the architecture DCL assumes.
 
-## Available Software Types
+## Available Project Types
 
-These are the Software Types available in the Gradle Android/JVM ecosystem plugins (as of EAP3). Use them as the top-level block in generated `.gradle.dcl` files.
+These are the Project Types available in the Gradle Android/JVM ecosystem plugins (as of EAP3). Use them as the top-level block in generated `.gradle.dcl` files.
 
-### Software Type Reference
+### Project Type Reference
 
-| Applied Plugin | Software Type Block | Ecosystem Plugin |
+| Applied Plugin | Project Type Block | Ecosystem Plugin |
 |---|---|---|
 | `com.android.application` | `androidApplication { }` | `org.gradle.experimental.android-ecosystem` |
 | `com.android.library` | `androidLibrary { }` | `org.gradle.experimental.android-ecosystem` |
@@ -86,7 +88,7 @@ These are the Software Types available in the Gradle Android/JVM ecosystem plugi
 | `java-gradle-plugin` | **Do NOT migrate** — stays as `.gradle.kts` | N/A |
 | `org.jetbrains.kotlin.multiplatform` | `kotlinMultiplatform { }` (prototype) | unified-prototype only |
 
-### DSL Schema by Software Type
+### DSL Schema by Project Type
 
 **`androidApplication`** — available properties and nested blocks:
 
@@ -102,7 +104,7 @@ These are the Software Types available in the Gradle Android/JVM ecosystem plugi
 | `testing { dependencies { } }` | Block | | Test dependencies (replaces `testImplementation`, `androidTestImplementation`) |
 
 What moves to settings `defaults {}`: `compileSdk`, `minSdk`, `targetSdk`, `jdkVersion`
-What the Software Type handles: plugin application (AGP, KGP), `compileOptions`, `kotlinOptions`
+What the Project Type handles: plugin application (AGP, KGP), `compileOptions`, `kotlinOptions`
 
 **`androidLibrary`** — same as `androidApplication` except no `applicationId`, `versionCode`, `versionName`, or `applicationIdSuffix`. Minimal form (when all config is in settings defaults):
 
@@ -121,12 +123,12 @@ androidLibrary {
 
 ### Project Features
 
-Project Features are opt-in capabilities that nest inside any Software Type block. They add functionality without requiring explicit plugin application.
+Project Features are opt-in capabilities that nest inside any Project Type block. They add functionality without requiring explicit plugin application.
 
 | Feature | DSL | Notes |
 |---|---|---|
-| Kotlin Serialization | `kotlinSerialization { version = libs.versions.x; jsonEnabled = true }` | Adds kotlinx-serialization plugin + runtime |
-| Testing | `testing { dependencies { implementation(libs.junit) } }` | Test dependencies and configuration |
+| Kotlin Serialization | `kotlinSerialization { version = "1.6.3"; jsonEnabled = true }` | Adds kotlinx-serialization plugin + runtime (inline version — no catalogs in `.dcl`) |
+| Testing | `testing { dependencies { implementation("junit:junit:4.13.2") } }` | Test dependencies and configuration |
 | Hilt | `hilt { }` | Hilt/Dagger injection (when available) |
 | Compose | `compose { }` | Jetpack Compose (when available as a feature) |
 
@@ -146,17 +148,14 @@ If the user provides a specific module path, scan only that module's `build.grad
 
 **Standard mode:** Scan `build.gradle.kts`, `build.gradle`, and `settings.gradle.kts` files. Exclude `buildSrc/`, `build-logic/`, and `gradle/` directories from the migration report (they are build logic and stay as KTS).
 
-**Version catalog detection:** Check for `gradle/libs.versions.toml` (or any `.toml` file referenced in `settings.gradle.kts` via `versionCatalogs {}`). If found, parse it and build a lookup map of:
-- **Libraries:** `[libraries]` entries → maps GAV coordinates to catalog accessors (e.g., `com.squareup.okhttp3:okhttp` → `libs.okhttp`)
-- **Plugins:** `[plugins]` entries → maps plugin IDs to catalog accessors (e.g., `org.jetbrains.kotlin.android` → `libs.plugins.kotlin.android`)
-- **Versions:** `[versions]` entries → maps version keys to catalog version accessors (e.g., `kotlinxSerialization = "1.6.3"` → `libs.versions.kotlinx.serialization`)
+**Version catalog detection:** Check for `gradle/libs.versions.toml` (or any `.toml` file referenced in `settings.gradle.kts` via `versionCatalogs {}`). If found, parse it and build a **reverse** lookup map (accessor → GAV/version) so `libs.x` references can be inlined to coordinates in generated `.dcl`:
+- **Libraries:** `[libraries]` entries → map catalog accessors back to GAV coordinates (e.g., `libs.okhttp` → `com.squareup.okhttp3:okhttp:4.12.0`)
+- **Plugins:** `[plugins]` entries → map plugin accessors back to plugin IDs
+- **Versions:** `[versions]` entries → map version accessors back to literal version strings (e.g., `libs.versions.kotlinx.serialization` → `1.6.3`)
 
-This map is used in Step 5 to preserve version catalog references in generated DCL files. DCL fully supports version catalog accessors — they are not imperative code.
+This map is used in Step 5 to **convert** version catalog references to plain GAV coordinates in generated `.dcl` files. **Fully declarative `.dcl` files do NOT support version catalog (`libs.x`) accessors yet** (per the official DCL migration guide) — so `libs.okhttp` must be inlined to `com.squareup.okhttp3:okhttp:4.12.0`. The lookup map lets us resolve each accessor back to its GAV coordinate. (Version catalogs still work in `.kts` files during intermediate migration.)
 
-**Type-safe project dependencies (`projects` catalog):** Starting with Gradle 9, the `projects` accessor is enabled by default, providing type-safe project dependency references. Check the Gradle wrapper version (in `gradle/wrapper/gradle-wrapper.properties`) and `settings.gradle.kts` for:
-- **Gradle ≥ 9:** `projects` catalog is available by default. Use `projects.core.network` instead of `project(":core:network")`.
-- **Gradle < 9 with opt-in:** Look for `enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")` in `settings.gradle.kts`. If present, `projects` is available.
-- **Otherwise:** Fall back to the legacy `project(":path")` syntax.
+**Type-safe project dependencies (`projects` catalog):** The `projects` accessor is a Kotlin-DSL convenience. In `.kts` files (including intermediate migration and build logic) it works as usual. **In fully declarative `.dcl` files, prefer raw `project(":path")` dependencies** — that is the form used by the official Gradle DCL samples, and `projects.x` accessor support in `.dcl` is not confirmed. You may still record `projects` catalog availability in the report for `.kts` contexts.
 
 The `projects` accessor maps project paths to dot-separated, camelCased accessors. Kebab-case and snake_case path segments are converted to camelCase:
 - `:core:network` → `projects.core.network`
@@ -177,9 +176,9 @@ Also scan `settings.gradle.kts` for project-wide issues (e.g., `allprojects {}` 
 
 ### 2. Classify Each Module
 
-Determine the Software Type based on applied plugins:
+Determine the Project Type based on applied plugins:
 
-| Applied Plugin | Software Type |
+| Applied Plugin | Project Type |
 |---|---|
 | `com.android.application` | `androidApplication` |
 | `com.android.library` | `androidLibrary` |
@@ -211,28 +210,28 @@ When attribution is ambiguous (e.g., the violation is in a convention plugin tha
 
 | Pattern | Detection | Fix |
 |---|---|---|
-| **Conditional logic** | `if (`, `when (`, `when {`, `for (`, `while (` | Move to convention plugin / Software Type implementation |
-| **Function calls in config** | `file(`, `rootProject.file(`, `System.getenv(`, `Runtime.exec(`, `exec {` | Move to task execution time or Software Type |
+| **Conditional logic** | `if (`, `when (`, `when {`, `for (`, `while (` | Move to convention plugin / Project Type implementation |
+| **Function calls in config** | `file(`, `rootProject.file(`, `System.getenv(`, `Runtime.exec(`, `exec {` | Move to task execution time or Project Type |
 | **`afterEvaluate {}`** | Literal string match | Replace with lazy APIs: `provider {}`, `configureEach {}`, `tasks.named {}` |
 | **`beforeEvaluate {}`** | Literal string match | Use `plugins.withType<T> {}` or settings plugins |
 | **Cross-project access** | `project(":other").`, `rootProject.`, `parent.` (config reads) | Use proper dependency declarations or settings defaults |
 | **`allprojects {}`** | Literal string match | Move to `dependencyResolutionManagement {}` in settings or convention plugins |
 | **`subprojects {}`** | Literal string match | Move to convention plugins applied per-project |
 | **Custom task registration** | `tasks.register {`, `tasks.create {`, `task(` | Move to included build plugin |
-| **`extra` / `ext` properties** | `extra[`, `extra.set(`, `ext[`, `ext.` | Replace with typed Software Type properties |
-| **`buildscript {}`** | Literal block | Migrate to `plugins {}` block first, then to DCL Software Type |
+| **`extra` / `ext` properties** | `extra[`, `extra.set(`, `ext[`, `ext.` | Replace with typed Project Type properties |
+| **`buildscript {}`** | Literal block | Migrate to `plugins {}` block first, then to DCL Project Type |
 | **Local variables** | `val ` / `var ` at top level or inside `android {}` | Inline the value or move to settings defaults |
-| **String interpolation in config** | `"${...}"` in property assignments | Use literal values; dynamic computation belongs in Software Type |
-| **`apply(plugin = ...)` / `apply(from = ...)`** | Literal match | Use `plugins {}` block (pre-DCL step) or Software Type |
+| **String interpolation in config** | `"${...}"` in property assignments | Use literal values; dynamic computation belongs in Project Type |
+| **`apply(plugin = ...)` / `apply(from = ...)`** | Literal match | Use `plugins {}` block (pre-DCL step) or Project Type |
 
-#### ⚠️ Warnings (migrate to settings defaults or Software Type)
+#### ⚠️ Warnings (migrate to settings defaults or Project Type)
 
 | Pattern | Detection | Recommendation |
 |---|---|---|
 | **`compileSdk` / `minSdk` / `targetSdk`** | Explicit assignment in `android {}` | Move to `defaults {}` block in `settings.gradle.dcl` |
 | **`jvmTarget` / `sourceCompatibility` / `targetCompatibility`** | Explicit assignment | Derive from `jdkVersion` in settings defaults |
 | **`composeOptions { kotlinCompilerExtensionVersion = ... }`** | Explicit assignment | Derived automatically from KGP version in DCL |
-| **`kotlinOptions { freeCompilerArgs += ... }`** | Explicit assignment | Move to Software Type or settings defaults |
+| **`kotlinOptions { freeCompilerArgs += ... }`** | Explicit assignment | Move to Project Type or settings defaults |
 
 #### 🔶 Isolated Projects Violations (blocks parallel configuration)
 
@@ -270,22 +269,23 @@ Classify each module into one of these categories based on the findings from Ste
 
 ### 5. Generate Equivalent DCL
 
-For modules classified as **✅ Ready** or **⚠️ Nearly Ready**, generate the equivalent `.gradle.dcl` file using the Software Type references above.
+For modules classified as **✅ Ready** or **⚠️ Nearly Ready**, generate the equivalent `.gradle.dcl` file using the Project Type references above.
 
-**Version catalog handling:** When generating DCL, preserve and improve the dependency format from the source build file:
-- If the source uses `libs.x` catalog accessors (e.g., `implementation(libs.okhttp)`), keep them as-is. Version catalog accessors are fully supported in DCL.
-- If the source uses raw GAV strings (e.g., `implementation("com.squareup.okhttp3:okhttp:4.12.0")`), check the version catalog lookup map from Step 1. If a matching entry exists, replace the raw string with the catalog accessor. If no match, keep the raw string.
-- If the source uses `platform()` / BOM declarations with catalog refs (e.g., `implementation(platform(libs.compose.bom))`), preserve them.
+**Version catalog handling:** Fully declarative `.dcl` files **cannot** use version catalog (`libs.x`) accessors yet (per the official DCL migration guide). When generating DCL, inline every catalog reference to a plain GAV coordinate:
+- `implementation(libs.okhttp)` → `implementation("com.squareup.okhttp3:okhttp:4.12.0")`, resolving the coordinate and version from the lookup map built in Step 1.
+- Raw GAV strings already in the source → keep as-is.
+- `platform()` / BOM catalog refs (e.g., `implementation(platform(libs.compose.bom))`) → inline to `implementation(platform("androidx.compose:compose-bom:<version>"))`.
+- Catalog version accessors used by Project Features (e.g., `kotlinSerialization { version = libs.versions.x }`) → inline the literal version string.
 
-**Project dependency handling:**
-- If the `projects` catalog is available (Gradle ≥ 9, or `TYPESAFE_PROJECT_ACCESSORS` enabled), convert `project(":...")` to `projects.x.y` using camelCase for kebab-case/snake_case segments (e.g., `project(":core:legacy-network")` → `projects.core.legacyNetwork`).
-- If not available, keep the legacy `project(":...")` syntax.
+**Project dependency handling:** The official Gradle DCL samples use raw `project(":path")` dependencies inside `.dcl` files, so prefer that form:
+- Emit `implementation(project(":core:common"))` in generated `.dcl`.
+- Type-safe `projects.x` accessors are **not confirmed** to work in fully declarative `.dcl` yet — do not emit them unless you have verified support against your target Gradle version.
 
 **Dependency ordering:** Sort all dependencies alphabetically within each configuration group (`api` before `implementation`, then alphabetical within each). This applies to both the `dependencies { }` block and `testing { dependencies { } }` block.
 
 Ordering rules:
 1. Group by configuration: `api` → `compileOnly` → `implementation` → `runtimeOnly`
-2. Within each group: `platform()`/BOM entries first, then `libs.x` entries alphabetically, then `projects.x` entries alphabetically
+2. Within each group: `platform()`/BOM entries first, then GAV coordinate strings alphabetically, then `project(":...")` entries alphabetically
 3. Apply the same ordering inside `testing { dependencies { } }`
 
 **Mapping rules:**
@@ -296,23 +296,23 @@ Ordering rules:
 | `plugins { id("com.android.application") }` | Top-level `androidApplication { }` |
 | `plugins { id("java-library") }` | Top-level `javaLibrary { }` |
 | `plugins { id("org.jetbrains.kotlin.jvm") }` | Top-level `kotlinJvmLibrary { }` |
-| `android { namespace = "..." }` | `namespace = "..."` (direct child of Software Type) |
+| `android { namespace = "..." }` | `namespace = "..."` (direct child of Project Type) |
 | `android { defaultConfig { applicationId = "..." } }` | `applicationId = "..."` (direct child) |
 | `android { defaultConfig { versionCode = N } }` | `versionCode = N` (direct child) |
 | `android { defaultConfig { versionName = "..." } }` | `versionName = "..."` (direct child) |
 | `android { buildTypes { release { isMinifyEnabled = true } } }` | `buildTypes { release { minify { enabled = true } } }` |
 | `android { buildTypes { debug { applicationIdSuffix = "..." } } }` | `buildTypes { debug { applicationIdSuffix = "..." } }` |
-| `dependencies { implementation(libs.x) }` | `dependencies { implementation(libs.x) }` (preserve, sort alphabetically) |
-| `dependencies { implementation("group:artifact:version") }` | `dependencies { implementation(libs.x) }` if catalog match exists, else keep raw |
-| `dependencies { api(libs.x) }` | `dependencies { api(libs.x) }` |
-| `dependencies { implementation(project(":path")) }` | `dependencies { implementation(projects.path) }` if `projects` catalog available |
-| `dependencies { testImplementation(libs.x) }` | `testing { dependencies { implementation(libs.x) } }` |
-| `dependencies { androidTestImplementation(libs.x) }` | `testing { dependencies { implementation(libs.x) } }` |
-| `plugins { id("kotlinx-serialization") }` | `kotlinSerialization { version = libs.versions.x }` (Project Feature, use catalog version if available) |
+| `dependencies { implementation(libs.x) }` | `dependencies { implementation("group:artifact:version") }` (inline catalog ref to GAV, sort alphabetically) |
+| `dependencies { implementation("group:artifact:version") }` | `dependencies { implementation("group:artifact:version") }` (keep raw GAV) |
+| `dependencies { api(libs.x) }` | `dependencies { api("group:artifact:version") }` (inline to GAV) |
+| `dependencies { implementation(project(":path")) }` | `dependencies { implementation(project(":path")) }` (keep raw `project()` — samples use this in `.dcl`) |
+| `dependencies { testImplementation(libs.x) }` | `testing { dependencies { implementation("group:artifact:version") } }` |
+| `dependencies { androidTestImplementation(libs.x) }` | `testing { dependencies { implementation("group:artifact:version") } }` |
+| `plugins { id("kotlinx-serialization") }` | `kotlinSerialization { version = "<literal version>" }` (Project Feature; inline the catalog version) |
 | `compileSdk`, `minSdk`, `targetSdk` | Remove — move to settings `defaults {}` |
 | `compileOptions`, `kotlinOptions`, `jvmTarget` | Remove — derived from `jdkVersion` in settings defaults |
 | `composeOptions { kotlinCompilerExtensionVersion = ... }` | Remove — derived automatically in DCL |
-| `plugins {}` block | Remove entirely — Software Type handles plugin application |
+| `plugins {}` block | Remove entirely — Project Type handles plugin application |
 
 ### 6. Generate Settings Defaults Recommendations
 
@@ -365,11 +365,11 @@ For each module, output a structured report:
 
 📊 **Readiness: [✅ Ready | ⚠️ Nearly Ready | � Has Blockers | ❌ Not Ready]**
 
-**Software Type:** `androidLibrary` | `androidApplication` | `javaLibrary` | etc.
+**Project Type:** `androidLibrary` | `androidApplication` | `javaLibrary` | etc.
 
 ### ❌ Hard Blockers (N found)
 1. **Line XX**: `if (isCI) { ... }` — Conditional logic
-   → Move to convention plugin or Software Type implementation
+   → Move to convention plugin or Project Type implementation
 2. **Line XX**: `afterEvaluate { ... }` — Lifecycle hook
    → Replace with lazy APIs (provider {}, configureEach {})
 
@@ -388,12 +388,12 @@ For each module, output a structured report:
 androidLibrary {
     namespace = "com.example.mylib"
     dependencies {
-        implementation(libs.okhttp)
-        implementation(projects.core.common)
+        implementation("com.squareup.okhttp3:okhttp:4.12.0")
+        implementation(project(":core:common"))
     }
     testing {
         dependencies {
-            implementation(libs.junit)
+            implementation("junit:junit:4.13.2")
         }
     }
 }
@@ -460,7 +460,7 @@ If yes, for each module classified as ✅ Ready or ⚠️ Nearly Ready:
    - `afterEvaluate {}` — requires understanding the deferred logic
    - Cross-project access — requires dependency architecture changes
    - Custom task registration — requires moving to included build
-   - Conditional logic — requires Software Type design decisions
+   - Conditional logic — requires Project Type design decisions
 6. **Output a summary** of files created, files modified, and remaining manual steps
 
 **Important:** Always create new files rather than overwriting. Let the user diff, validate, and remove the originals themselves.
@@ -499,7 +499,7 @@ When the user requests JSON output, write the report as a single JSON file (e.g.
   "modules": [
     {
       "path": ":core:network",
-      "softwareType": "androidLibrary",
+      "projectType": "androidLibrary",
       "readiness": "ready",
       "hardBlockers": [],
       "warnings": [
@@ -512,19 +512,19 @@ When the user requests JSON output, write the report as a single JSON file (e.g.
         }
       ],
       "isolatedProjectsViolations": [],
-      "generatedDcl": "androidLibrary {\n    namespace = \"com.example.core.network\"\n    dependencies {\n        implementation(libs.okhttp)\n    }\n}",
+      "generatedDcl": "androidLibrary {\n    namespace = \"com.example.core.network\"\n    dependencies {\n        implementation(\"com.squareup.okhttp3:okhttp:4.12.0\")\n    }\n}",
       "settingsDefaults": ["compileSdk", "minSdk", "jdkVersion"]
     },
     {
       "path": ":app",
-      "softwareType": "androidApplication",
+      "projectType": "androidApplication",
       "readiness": "not-ready",
       "hardBlockers": [
         {
           "line": 15,
           "pattern": "if (isCI) { ... }",
           "category": "conditional-logic",
-          "recommendation": "Move to convention plugin or Software Type",
+          "recommendation": "Move to convention plugin or Project Type",
           "source": "project"
         },
         {

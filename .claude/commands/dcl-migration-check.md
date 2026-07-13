@@ -4,6 +4,8 @@ description: Check a module's readiness for Declarative Gradle (DCL) and Isolate
 
 Analyze Gradle build files for Declarative Gradle migration readiness and Isolated Projects compatibility.
 
+> **Terminology (current as of Gradle 9.6):** What earlier EAPs and docs called a **"Software Type"** is now a **"Project Type"**, and a **"Software Feature"** is a **"Project Feature."** The plugin-authoring annotation `@SoftwareType` was **removed in the Gradle 9.x line** and replaced by the binding API (`@BindsProjectType` + `ProjectTypeBinding` + `Definition<T>`) in the promoted `org.gradle.features` package. This skill only generates **consumer** DCL (the `androidLibrary { }` / `androidApplication { }` blocks), which are unchanged by the rename — always use the current "Project Type" naming in reports, and treat any lingering "Software Type" wording in third-party docs as the same concept.
+
 **Usage:**
 - `claude dcl-migration-check path/to/module` — scan a specific module
 - `claude dcl-migration-check` — scan all modules in the current project
@@ -20,11 +22,11 @@ If `$ARGUMENTS` contains `--deep`, enable Deep mode. If `$ARGUMENTS` contains `-
 
 **Deep** (`--deep`): In addition to Standard, also scan `.kt` source files in `buildSrc/src/`, `build-logic/*/src/`, `gradle/*/src/`, and any `*-plugin*/src/` directories. Many projects implement Gradle plugins, convention plugins, and custom tasks in regular `.kt` files. These contain the same anti-patterns (cross-project access, eager APIs, `afterEvaluate`) that block Isolated Projects. Flag them with the same rules, but note they are **build logic files** — they don't migrate to DCL themselves, but must be fixed for Isolated Projects compatibility.
 
-## Available Software Types
+## Available Project Types
 
 Use these as the top-level block when generating `.gradle.dcl` files:
 
-| Applied Plugin | Software Type Block | Ecosystem Plugin |
+| Applied Plugin | Project Type Block | Ecosystem Plugin |
 |---|---|---|
 | `com.android.application` | `androidApplication { }` | `org.gradle.experimental.android-ecosystem` |
 | `com.android.library` | `androidLibrary { }` | `org.gradle.experimental.android-ecosystem` |
@@ -33,7 +35,7 @@ Use these as the top-level block when generating `.gradle.dcl` files:
 | `java-gradle-plugin` | **Do NOT migrate** — stays as `.gradle.kts` | N/A |
 | `org.jetbrains.kotlin.multiplatform` | `kotlinMultiplatform { }` (prototype) | unified-prototype only |
 
-### DSL Schema by Software Type
+### DSL Schema by Project Type
 
 **`androidApplication`** — available properties and nested blocks:
 
@@ -49,7 +51,7 @@ Use these as the top-level block when generating `.gradle.dcl` files:
 | `testing { dependencies { } }` | Block | | Test deps (replaces `testImplementation`, `androidTestImplementation`) |
 
 What moves to settings `defaults {}`: `compileSdk`, `minSdk`, `targetSdk`, `jdkVersion`
-What the Software Type handles: plugin application (AGP, KGP), `compileOptions`, `kotlinOptions`
+What the Project Type handles: plugin application (AGP, KGP), `compileOptions`, `kotlinOptions`
 
 **`androidLibrary`** — same as `androidApplication` except no `applicationId`, `versionCode`, `versionName`, or `applicationIdSuffix`.
 
@@ -59,8 +61,8 @@ What the Software Type handles: plugin application (AGP, KGP), `compileOptions`,
 
 | Feature | DSL | Notes |
 |---|---|---|
-| Kotlin Serialization | `kotlinSerialization { version = libs.versions.x; jsonEnabled = true }` | Adds kotlinx-serialization plugin + runtime |
-| Testing | `testing { dependencies { implementation(libs.junit) } }` | Test dependencies and configuration |
+| Kotlin Serialization | `kotlinSerialization { version = "1.6.3"; jsonEnabled = true }` | Adds kotlinx-serialization plugin + runtime (inline version — no catalogs in `.dcl`) |
+| Testing | `testing { dependencies { implementation("junit:junit:4.13.2") } }` | Test dependencies and configuration |
 | Hilt | `hilt { }` | Hilt/Dagger injection (when available) |
 | Compose | `compose { }` | Jetpack Compose (when available as a feature) |
 
@@ -133,24 +135,16 @@ If `settings.gradle.kts` contains `includeBuild()`:
 
 ### 1. Read the file(s) and classify the module
 
-**Version catalog detection:** Check for `gradle/libs.versions.toml` (or any `.toml` file referenced in `settings.gradle.kts` via `versionCatalogs {}`). If found, parse it and build a lookup map:
-- **Libraries:** `[libraries]` entries → maps GAV coordinates to catalog accessors (e.g., `com.squareup.okhttp3:okhttp` → `libs.okhttp`)
-- **Plugins:** `[plugins]` entries → maps plugin IDs to catalog accessors
-- **Versions:** `[versions]` entries → maps version keys to catalog version accessors
+**Version catalog detection:** Check for `gradle/libs.versions.toml` (or any `.toml` file referenced in `settings.gradle.kts` via `versionCatalogs {}`). If found, parse it and build a **reverse** lookup map (accessor → GAV/version):
+- **Libraries:** `[libraries]` entries → map catalog accessors back to GAV coordinates (e.g., `libs.okhttp` → `com.squareup.okhttp3:okhttp:4.12.0`)
+- **Plugins:** `[plugins]` entries → map plugin accessors back to plugin IDs
+- **Versions:** `[versions]` entries → map version accessors back to literal version strings
 
-This map is used in Step 4 to preserve or introduce version catalog references in generated DCL.
+This map is used in Step 4 to **inline** version catalog references to GAV coordinates. **Fully declarative `.dcl` files do NOT support `libs.x` accessors yet** (per the official DCL migration guide), so every catalog reference must be converted to a plain coordinate. (Catalogs still work in `.kts` during intermediate migration.)
 
-**Type-safe project dependencies (`projects` catalog):** Check the Gradle wrapper version (`gradle/wrapper/gradle-wrapper.properties`) and `settings.gradle.kts`:
-- **Gradle ≥ 9:** `projects` catalog is available by default. Use `projects.core.network` instead of `project(":core:network")`.
-- **Gradle < 9:** Look for `enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")` in `settings.gradle.kts`. If present, use `projects`. Otherwise, keep `project(":...")` syntax.
+**Type-safe project dependencies (`projects` catalog):** The `projects` accessor is a Kotlin-DSL convenience that works in `.kts` files. **In fully declarative `.dcl` files, prefer raw `project(":path")` dependencies** — that is the form used by the official Gradle DCL samples, and `projects.x` accessor support in `.dcl` is not confirmed. Record `projects` availability in the report for `.kts` contexts, but emit `project(":...")` in generated `.dcl`.
 
-The `projects` accessor converts path segments to camelCase:
-- `:core:network` → `projects.core.network`
-- `:core:legacy-network:ktor` → `projects.core.legacyNetwork.ktor`
-- `:feature:sign-in` → `projects.feature.signIn`
-- `:ui:card-details-ui` → `projects.ui.cardDetailsUi`
-
-Determine the DCL Software Type from applied plugins (see table above). Gradle plugin projects (`java-gradle-plugin`) should NOT be migrated — they are build logic.
+Determine the DCL Project Type from applied plugins (see table above). Gradle plugin projects (`java-gradle-plugin`) should NOT be migrated — they are build logic.
 
 ### 2. Scan for DCL blockers
 
@@ -210,18 +204,18 @@ Categories communicate actionability better than arbitrary scores.
 
 Only generate DCL for `build.gradle.kts` / `build.gradle` files (not `.kt` build logic files — those stay as Kotlin).
 
-**Version catalog handling:** Preserve and improve the dependency format:
-- `libs.x` catalog accessors → keep as-is (fully supported in DCL)
-- Raw GAV strings → replace with `libs.x` if a catalog match exists, else keep raw
-- `platform()` / BOM declarations → preserve
+**Version catalog handling:** Fully declarative `.dcl` files cannot use `libs.x` accessors yet. Inline every catalog reference to a plain GAV coordinate:
+- `libs.x` catalog accessors → inline to `"group:artifact:version"` using the reverse lookup map
+- Raw GAV strings → keep as-is
+- `platform()` / BOM catalog refs → inline to `platform("group:artifact:version")`
 
 **Project dependency handling:**
-- If `projects` catalog is available (Gradle ≥ 9, or `TYPESAFE_PROJECT_ACCESSORS` enabled) → convert `project(":...")` to `projects.x.y` with camelCase segments (e.g., `project(":core:legacy-network")` → `projects.core.legacyNetwork`)
-- Otherwise → keep legacy `project(":...")` syntax
+- Emit raw `project(":path")` in generated `.dcl` (matches official DCL samples)
+- Do NOT emit `projects.x` accessors in `.dcl` unless verified against your target Gradle version
 
 **Dependency ordering:** Sort dependencies alphabetically within each configuration group:
 1. Group by configuration: `api` → `compileOnly` → `implementation` → `runtimeOnly`
-2. Within each group: `platform()`/BOM first, then `libs.x` alphabetically, then `projects.x` alphabetically
+2. Within each group: `platform()`/BOM first, then GAV coordinate strings alphabetically, then `project(":...")` alphabetically
 3. Apply same ordering inside `testing { dependencies { } }`
 
 | KTS Pattern | DCL Equivalent |
@@ -230,22 +224,22 @@ Only generate DCL for `build.gradle.kts` / `build.gradle` files (not `.kt` build
 | `plugins { id("com.android.application") }` | Top-level `androidApplication { }` |
 | `plugins { id("java-library") }` | Top-level `javaLibrary { }` |
 | `plugins { id("org.jetbrains.kotlin.jvm") }` | Top-level `kotlinJvmLibrary { }` |
-| `android { namespace = "..." }` | `namespace = "..."` (direct child of Software Type) |
+| `android { namespace = "..." }` | `namespace = "..."` (direct child of Project Type) |
 | `android { defaultConfig { applicationId = "..." } }` | `applicationId = "..."` (direct child) |
 | `android { defaultConfig { versionCode = N } }` | `versionCode = N` (direct child) |
 | `android { defaultConfig { versionName = "..." } }` | `versionName = "..."` (direct child) |
 | `android { buildTypes { release { isMinifyEnabled = true } } }` | `buildTypes { release { minify { enabled = true } } }` |
-| `dependencies { implementation(libs.x) }` | `dependencies { implementation(libs.x) }` (preserve, sort alphabetically) |
-| `dependencies { implementation("group:artifact:version") }` | `dependencies { implementation(libs.x) }` if catalog match exists, else keep raw |
-| `dependencies { api(libs.x) }` | `dependencies { api(libs.x) }` |
-| `dependencies { implementation(project(":path")) }` | `dependencies { implementation(projects.path) }` if `projects` catalog available |
-| `dependencies { testImplementation(libs.x) }` | `testing { dependencies { implementation(libs.x) } }` |
-| `dependencies { androidTestImplementation(libs.x) }` | `testing { dependencies { implementation(libs.x) } }` |
-| `plugins { id("kotlinx-serialization") }` | `kotlinSerialization { version = libs.versions.x }` (use catalog version if available) |
+| `dependencies { implementation(libs.x) }` | `dependencies { implementation("group:artifact:version") }` (inline to GAV, sort alphabetically) |
+| `dependencies { implementation("group:artifact:version") }` | `dependencies { implementation("group:artifact:version") }` (keep raw GAV) |
+| `dependencies { api(libs.x) }` | `dependencies { api("group:artifact:version") }` (inline to GAV) |
+| `dependencies { implementation(project(":path")) }` | `dependencies { implementation(project(":path")) }` (keep raw `project()`) |
+| `dependencies { testImplementation(libs.x) }` | `testing { dependencies { implementation("group:artifact:version") } }` |
+| `dependencies { androidTestImplementation(libs.x) }` | `testing { dependencies { implementation("group:artifact:version") } }` |
+| `plugins { id("kotlinx-serialization") }` | `kotlinSerialization { version = "<literal version>" }` (inline the catalog version) |
 | `compileSdk`, `minSdk`, `targetSdk` | Remove — move to settings `defaults {}` |
 | `compileOptions`, `kotlinOptions`, `jvmTarget` | Remove — derived from `jdkVersion` in settings defaults |
 | `composeOptions { kotlinCompilerExtensionVersion = ... }` | Remove — derived automatically |
-| `plugins {}` block | Remove entirely — Software Type handles it |
+| `plugins {}` block | Remove entirely — Project Type handles it |
 
 ### 5. Output structured report
 
@@ -254,14 +248,14 @@ Only generate DCL for `build.gradle.kts` / `build.gradle` files (not `.kt` build
 
 📊 **Readiness: [✅ Ready | ⚠️ Nearly Ready | 🔶 Has Blockers | ❌ Not Ready]**
 
-**Software Type:** `androidLibrary` | `androidApplication` | `javaLibrary` | etc.
+**Project Type:** `androidLibrary` | `androidApplication` | `javaLibrary` | etc.
 
 ### ✅ Compatible
 - Plugin: com.android.library
-- Dependencies: N (all using version catalog)
+- Dependencies: N (catalog refs inlined to GAV for `.dcl`)
 - Namespace: com.example.mylib
-- Version catalog: gradle/libs.versions.toml detected
-- Projects catalog: available (Gradle 9+)
+- Version catalog: gradle/libs.versions.toml detected (inlined to GAV)
+- Projects catalog: available in `.kts` (emit raw `project()` in `.dcl`)
 
 ### ❌ Hard Blockers (N found)
 1. **Line XX**: `pattern` — Description
@@ -279,12 +273,12 @@ Only generate DCL for `build.gradle.kts` / `build.gradle` files (not `.kt` build
 androidLibrary {
     namespace = "com.example.mylib"
     dependencies {
-        implementation(libs.okhttp)
-        implementation(projects.core.common)
+        implementation("com.squareup.okhttp3:okhttp:4.12.0")
+        implementation(project(":core:common"))
     }
     testing {
         dependencies {
-            implementation(libs.junit)
+            implementation("junit:junit:4.13.2")
         }
     }
 }
@@ -383,7 +377,7 @@ Write a `dcl-migration-report.json` file instead of printing Markdown:
   "modules": [
     {
       "path": ":core:network",
-      "softwareType": "androidLibrary",
+      "projectType": "androidLibrary",
       "readiness": "ready",
       "hardBlockers": [],
       "warnings": [
