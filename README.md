@@ -1,8 +1,8 @@
 # Declarative Gradle: DroidCon Orlando 2026
 
-**"The End of build.gradle: Embracing Declarative Gradle and Software Types"**
+**"The End of build.gradle: Embracing Declarative Gradle and Project Types"**
 
-A presentation for DroidCon Orlando 2026 covering Declarative Gradle (DCL), Software Types, Isolated Projects, migration strategies, and AI-assisted migration tooling.
+A presentation for DroidCon Orlando 2026 covering Declarative Gradle (DCL), Project Types, Isolated Projects, migration strategies, and AI-assisted migration tooling.
 
 ## Repository Contents
 
@@ -11,7 +11,7 @@ A presentation for DroidCon Orlando 2026 covering Declarative Gradle (DCL), Soft
 | `index.html` | Reveal.js presentation (serves the slides) |
 | `droidcon-orlando-2026-declarative-gradle.md` | Slide content in Markdown (with speaker notes, AI skill demos reflect latest capabilities) |
 | `The End of build.gradle...pdf` | Pre-exported PDF of the presentation |
-| `profile.JPG` / `profile-2.jpg` | Speaker profile images |
+| `profile.JPG` | Speaker profile images |
 | `DroidCon_icon_rotatet.avif` | DroidCon icon used in the slide theme |
 | `.windsurf/workflows/migrate-to-dcl.md` | Windsurf AI skill for DCL migration auditing |
 | `.claude/commands/dcl-migration-check.md` | Claude Code command for DCL migration auditing |
@@ -64,9 +64,9 @@ Reveal.js supports PDF export via the browser print dialog:
 This repository includes AI coding assistant skills that audit Gradle builds for DCL readiness **and perform the migration**. Both skills:
 
 - **Pre-scan checks:** Verify Gradle version/DCL availability, flag Groovy→KTS prerequisite, detect composite builds (`includeBuild()`)
-- Classify each module's Software Type (`androidApplication`, `androidLibrary`, `javaLibrary`, `kotlinJvmLibrary`)
-- Parse `gradle/libs.versions.toml` and preserve version catalog references (`libs.x`) in generated DCL
-- Detect Gradle ≥ 9 `projects` catalog (or `TYPESAFE_PROJECT_ACCESSORS`) and use type-safe project accessors (`projects.x`) with camelCase
+- Classify each module's Project Type (`androidApplication`, `androidLibrary`, `javaLibrary`, `kotlinJvmLibrary`)
+- Parse `gradle/libs.versions.toml` and **inline** version catalog references (`libs.x`) to GAV coordinates — fully declarative `.dcl` files don't support catalog accessors yet
+- Emit raw `project(":path")` dependencies in generated `.dcl` (as used by the official DCL samples); `projects.x` type-safe accessors are used only in `.kts` contexts
 - Check for DCL blockers (imperative logic, cross-project access, eager APIs, etc.)
 - Check for Isolated Projects violations (allprojects, subprojects, eager task APIs, project access in task actions)
 - **Assess readiness** using actionable categories (✅ Ready, ⚠️ Nearly Ready, 🔶 Has Blockers, ❌ Not Ready) instead of arbitrary scores

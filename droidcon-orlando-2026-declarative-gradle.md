@@ -13,13 +13,13 @@ Everything between `[PACING]` and `[TRANSITION]` is your scripted talking point.
 ---
 
 # The End of `build.gradle`
-## Embracing Declarative Gradle and Software Types
+## Embracing Declarative Gradle and ~~Software~~ Project Types
 
 Tom Belk | Android Platform Lead | <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Capital_One_logo.svg" class="logo-inline logo-white-bg" alt="Capital One" style="height:1.2em; vertical-align:middle;">
 
 DroidCon Orlando | July 2026
 
-> Speaker Notes: Welcome everyone. I'm Tom Belk, Android Platform Lead at Capital One. We build developer experience tooling, CI, IDE plugins, feature architecture, networking, and testing infrastructure used by 9 applications. Today we're going to talk about the future of how you configure your Android builds.
+> Speaker Notes: Welcome everyone. I'm Tom Belk, Android Platform Lead at Capital One. We build developer experience tooling, CI, IDE plugins, feature architecture, networking, and testing infrastructure used by 9 applications. Today we're going to talk about the future of how you configure your Android builds. [PACING: point at the strikethrough in the title.] And yes, that strikethrough in my title is not a design choice. Somewhere between building this talk and standing here, Gradle deleted the `@SoftwareType` annotation outright and renamed the whole concept from 'Software Type' to 'Project Type' which ate my original title and forced me to rewrite a chunk of these slides at the last minute. If a stray 'Software Type' sneaks through anywhere today, apologies. The good news: it's the same concept, just renamed and promoted out of Gradle's internal packages which is actually a great sign that this stuff is maturing fast.
 
 ---
 
@@ -279,7 +279,7 @@ android {
 
 - Actively evolving, check the official docs for current status
 
-- Backed by Gradle Inc. - actively developed with monthly updates
+- Backed by Gradle Inc. - ongoing work now landing in core Gradle releases
 
 > Speaker Notes: It's Gradle's initiative to create a clear separation between what your project is versus how it gets built. The DCL language is a restricted subset of Kotlin - no arbitrary code, no imperative logic, just pure configuration. This initiative's status changes frequently so check the Gradle newsletter or declarative.gradle.org for the latest details.
 
@@ -308,7 +308,7 @@ android {
 | Build scripts are code - hard to parse tooling-wise | DCL is statically analyzable |
 | IDE import is slow and fragile | Parallel configuration, faster sync |
 | New devs confused by build logic | Pure declaration, no imperative code |
-| `allprojects`/`subprojects` cause coupling | Software Types + defaults in settings |
+| `allprojects`/`subprojects` cause coupling | Project Types + defaults in settings |
 | Plugin conflicts and ordering issues | Controlled, typed plugin application |
 
 > Speaker Notes: [PACING: Give 3 seconds for the audience to scan the table, then anchor on row 2.] Why should you migrate? Quick note on row 2 - IDE import is slow and fragile. How many of you have waited 3+ minutes for a Gradle sync after touching a build file? That's because Gradle has to evaluate every build script sequentially just to understand your project structure. DCL eliminates that by being statically analyzable. The IDE can understand your project without executing anything. The other rows follow the same pattern: today's pain point on the left, DCL's structural fix on the right. [TRANSITION: The enterprise version of this story is even more compelling.]
@@ -320,7 +320,7 @@ android {
 - **Configuration time scales linearly** with module count today
 - Cross-project coupling via `allprojects {}` blocks prevents parallelism
 - Declarative files enable **parallel configuration** of projects
-- Build engineers define **Software Types** once, developers reuse them
+- Build engineers define **Project Types** once, developers reuse them
 - Tooling can **auto-modify** DCL files safely (mutations API)
 
 > Speaker Notes: [PACING: Let the audience read for 2-3 seconds, then anchor on the first bullet.] Unfortunately, configuration time scales linearly with module count. At Capital One, we have over 2,500 modules. A full project configuration takes over 4 minutes. DCL files can be configured in parallel because they're guaranteed to be isolated. No code that reaches into other projects. The rest of these items follow from that one change. [TRANSITION: There's also a security angle that most people don't think about.]
@@ -415,7 +415,7 @@ androidApplication {
 ```
 
 
-> Speaker Notes: This is a real example from the Gradle declarative-gradle repository. Notice - no plugins block. No android block wrapping everything. The top-level block IS the software type: androidApplication. Everything inside is pure configuration.
+> Speaker Notes: This is a real example from Gradle's declarative gradle repository. Notice, no plugins block, no android block wrapping everything. The top level block is the Project Type: androidApplication. Everything inside is pure configuration. [TRANSITION: That's an app module - libraries are even leaner.]
 
 ---
 
@@ -441,7 +441,7 @@ androidLibrary {
 }
 ```
 
-> Speaker Notes: Here's a library module. Notice kotlinSerialization is a nested feature - it's a "project feature" that adds capabilities. No plugin ID application, no figuring out the right plugin to apply. Just declare what you need.
+> Speaker Notes: Here's a library module. Notice kotlinSerialization is a nested feature - it's a "project feature" that adds capabilities. No plugin ID application, no figuring out the right plugin to apply. Just declare what you need. [TRANSITION: And the smallest modules collapse to almost nothing.]
 
 ---
 
@@ -464,11 +464,11 @@ androidLibrary {
 </div>
 </div>
 
-> Speaker Notes: [PACING: Let the 2-line code block and the callout box land for 3 seconds.] This is the dream. A utility module that inherits all its defaults from settings. Two lines. No boilerplate. Compare this to the 40+ lines we typically see in a build.gradle.kts for a simple library module. Now you might be thinking "wait, convention plugins already solve this." You're right, partially. Convention plugins centralize logic, but the consuming build file still has to apply them, still uses full Kotlin, and still allows arbitrary code alongside. DCL makes the consuming file pure data. The convention plugin becomes a Software Type, and the consuming file becomes two lines of configuration that tools can statically analyze. [TRANSITION: Let me show you what a Software Type actually is.]
+> Speaker Notes: [PACING: Let the 2-line code block and the callout box land for 3 seconds.] This is the dream. A utility module that inherits all its defaults from settings. Two lines. No boilerplate. Compare this to the 40+ lines we typically see in a build.gradle.kts for a simple library module. Now you might be thinking "wait, convention plugins already solve this." You're right, partially. Convention plugins centralize logic, but the consuming build file still has to apply them, still uses full Kotlin, and still allows arbitrary code alongside. DCL makes the consuming file pure data. The convention plugin becomes a Project Type, and the consuming file becomes two lines of configuration that tools can statically analyze. [TRANSITION: Let me show you what a Project Type actually is.]
 
 ---
 
-# Software Types Explained
+# Project Types Explained
 
 <div style="display:flex; gap:16px; margin-bottom:8px;">
 <div style="flex:1; background:rgba(245,166,35,0.08); border:1px solid rgba(245,166,35,0.4); border-radius:8px; padding:10px 14px;">
@@ -477,25 +477,29 @@ androidLibrary {
 </div>
 <div style="display:flex; align-items:center; padding:0 4px; font-size:1.4em; color:#00c9db;">→</div>
 <div style="flex:1; background:rgba(61,220,132,0.08); border:1px solid rgba(61,220,132,0.4); border-radius:8px; padding:10px 14px;">
-<p style="margin:0 0 2px 0; font-weight:600; color:#3DDC84; font-size:0.9em;">Software Type</p>
+<p style="margin:0 0 2px 0; font-weight:600; color:#3DDC84; font-size:0.9em;">Project Type</p>
 <p style="margin:0; font-size:0.72em;">A convention plugin that <em>also</em> exposes a typed, declarative API. Consumers write <code>.gradle.dcl</code> instead of Kotlin.</p>
 </div>
 </div>
 
-<p style="text-align:center; font-size:0.65em; color:#888; margin:0 0 6px 0;">Convention plugins don't go away. They become the <strong style="color:#3DDC84;">implementation</strong> inside a Software Type. One per project. <strong style="color:#00c9db;">Project Features</strong> nest inside.</p>
+<p style="text-align:center; font-size:0.65em; color:#888; margin:0 0 6px 0;">Convention plugins don't go away. They become the <strong style="color:#3DDC84;">implementation</strong> inside a Project Type. One per project. <strong style="color:#00c9db;">Project Features</strong> nest inside.</p>
 
 ```kotlin
-@SoftwareType(name = "androidLibrary")
-abstract class AndroidLibrarySoftwareType {
-    // Declarative surface (what devs configure in .gradle.dcl):
-    abstract val namespace: Property<String>
-    abstract val dependencies: DependencyCollector
-    // Convention plugin logic (hidden from devs):
-    // applies AGP, sets compileSdk, minSdk, kotlinOptions
+// The definition = the typed surface devs configure in .gradle.dcl
+@Restricted
+interface AndroidLibraryDefinition : Definition<AndroidLibraryModel> {
+    val namespace: Property<String>
+    val dependencies: DependencyCollector
 }
+
+// A Plugin<Project> binds that definition to its build logic:
+@BindsProjectType(AndroidLibraryBinding::class)
+abstract class AndroidLibraryPlugin : Plugin<Project>
+// The binding names the "androidLibrary" block and points to an
+// apply action that runs the old convention-plugin logic (AGP, SDKs).
 ```
 
-> Speaker Notes: [PACING: Give 3-4 seconds for the two definition boxes, then walk through the code.] This is how I like to think about Software Types and convention plugins. They're the core concept. Look at those two boxes at the top and the arrow between them. A convention plugin is imperative Kotlin code that runs at configuration time - applies plugins, sets properties, wires tasks. You write these today. A Software Type wraps that convention plugin and also exposes a typed, declarative API on top. The convention plugin doesn't disappear - it becomes the implementation layer inside the Software Type. What changes? First, convention plugins live in buildSrc or an included build and consumers still write Kotlin. Software Types mean consumers write pure declarative config instead. Second, convention plugins can conflict with each other since any plugin can override what another set. Software Types enforce one per project with no overlap. And third, tools cannot safely modify a KTS file that applies convention plugins, but they CAN safely modify a .dcl file because the schema is known. If you already have convention plugins, you are 80% of the way there. The migration is: formalize that logic into the Software Type API. You might be thinking, "Can I compose Software Types? Can I wrap AGP's androidLibrary inside my own?" - Each project gets exactly one Software Type, so you can't nest them. But you don't need to. Your custom Software Type's implementation layer is still full Kotlin - it can call AGP APIs directly, just like your convention plugins do today. The android extension doesn't disappear, it just moves behind the curtain. Developers write capitalOneAndroidLibrary {} in DCL, and your implementation wires up AGP under the hood. For modular add-ons, that's what Project Features are for. [TRANSITION: Let's look at what the settings file looks like in DCL.]
+> Speaker Notes: [PACING: Give 3-4 seconds for the two definition boxes, then walk through the code.] This is how I like to think about Project Types and convention plugins. A convention plugin is imperative Kotlin that runs at configuration time - applies plugins, sets properties, wires tasks. You write these today. A Project Type wraps that convention plugin and also exposes a typed, declarative API on top. The convention plugin doesn't disappear - it becomes the implementation layer. What changes? Consumers write pure declarative config instead of Kotlin; there's exactly one Project Type per project with no overlap; and tools can safely modify a .dcl file because the schema is known. One question you might have is - can you compose Project Types; aka wrap AGP's androidLibrary inside your own? Each project gets exactly one Project Type, so you don't nest them. But your implementation layer is still full Kotlin and can call AGP directly. For modular add-ons, that's what Project Features are for. [TRANSITION: Let's look at what the settings file looks like in DCL.]
 
 ---
 
@@ -554,7 +558,7 @@ defaults {
 | File extension | `.gradle.kts` | `.gradle.dcl` |
 | Language | Full Kotlin | Restricted Kotlin subset |
 | Arbitrary code | ✅ Allowed | ❌ Not allowed |
-| Plugin application | `plugins { id("...") }` | Via Software Type |
+| Plugin application | `plugins { id("...") }` | Via Project Type |
 | Cross-project access | Possible (dangerous) | Blocked by design |
 | IDE analysis | Requires full evaluation | Static analysis possible |
 | Tooling modification | Fragile | Safe mutations API |
@@ -600,7 +604,7 @@ defaults {
 </div>
 </div>
 
-> Speaker Notes: [PACING: 3 seconds for the visual contrast to land.] What your IDE sees - this is why IDE support matters. On the Left side: to understand a KTS file, your IDE must fully evaluate it. Execute the Kotlin, resolve plugins dynamically, figure out what schema the android block even has. It can't predict conditional logic or afterEvaluate side effects. It needs to evaluate other projects if there's cross-project access. That's why Gradle sync is slow. On the Right side: DCL. The schema is known statically from the Software Type definition. The IDE never needs to execute anything. It knows every valid property, every valid nested block, instantly. That's why completion is perfect and sync is fast. [TRANSITION: And this isn't hypothetical. IDE support exists today.]
+> Speaker Notes: [PACING: 3 seconds for the visual contrast to land.] What your IDE sees - this is why IDE support matters. On the Left side: to understand a KTS file, your IDE must fully evaluate it. Execute the Kotlin, resolve plugins dynamically, figure out what schema the android block even has. It can't predict conditional logic or afterEvaluate side effects. It needs to evaluate other projects if there's cross-project access. That's why Gradle sync is slow. On the Right side: DCL. The schema is known statically from the Project Type definition. The IDE never needs to execute anything. It knows every valid property, every valid nested block, instantly. That's why completion is perfect and sync is fast. [TRANSITION: And this isn't hypothetical. IDE support exists today.]
 
 ---
 
@@ -668,11 +672,11 @@ mutationEngine.apply(mutation)
 
 ```
 // Enable in gradle.properties
-org.gradle.unsafe.isolated-projects=true
+org.gradle.isolated-projects=true
 ```
 
 
-> Speaker Notes: Isolated Projects are an enforcement mechanism that prevents cross-project access. DCL builds are inherently isolated because you can't write imperative code that reaches into other projects. [AUDIENCE] Has anyone here actually tried running --isolated-projects on their build? If you have, you know what's coming next.
+> Speaker Notes: What about Isolated Projects? It's a separate but closely related feature. It's the enforcement mechanism that prevents cross-project access. DCL builds are inherently isolated because you can't write imperative code that reaches into other projects. [AUDIENCE] Has anyone here actually tried running --isolated-projects on their build? If you have, you know what's coming next.
 
 ---
 
@@ -699,7 +703,7 @@ subprojects {
 
 **These patterns are incompatible with both Isolated Projects and DCL.**
 
-> Speaker Notes: These are the bread and butter of many enterprise builds. allprojects, subprojects, and direct project access are all violations. If your build uses these patterns - and most do - you have migration work ahead.
+> Speaker Notes: These are the bread and butter of many enterprise builds. allprojects, subprojects, and direct project access are all violations. If your build uses these patterns - and most do - you have migration work ahead. One subtler behavior change to flag: under Isolated Projects a child project no longer implicitly inherits properties or methods from its parent project - the docs call this out specifically, and it bites enterprise builds that lean on inherited ext properties.
 
 ---
 
@@ -711,9 +715,9 @@ subprojects {
   - The **offending project**
   - The **accessed project**
   - The **type of access** (cross-project, project-to-build, etc.)
-- Can temporarily ignore with `--Dorg.gradle.unsafe.isolated-projects.ignore-all-violations=true`
+- Can temporarily bypass with `org.gradle.isolated-projects.dangerously-ignore-problems=true` (use sparingly)
 
-> Speaker Notes: Gradle gives you actionable diagnostics. You can run your existing build with isolated projects enabled and get a report of everything that needs to change. It's like lint for your build configuration.
+> Speaker Notes: Gradle gives you actionable diagnostics. You can run your existing build with isolated projects enabled and get a report of everything that needs to change. It's like lint for your build configuration. The docs also call out a dedicated diagnostics mode - org.gradle.isolated-projects.diagnostics - that surfaces violations without failing the build, which is the safest way to survey a large build before you commit to fixing anything.
 
 ---
 
@@ -761,7 +765,7 @@ BUILD SUCCESSFUL with 3 isolation violations
 |---|---|---|
 | AGP (Android Gradle Plugin) | 🟡 In progress | Core DCL support via experimental ecosystem plugin |
 | KGP (Kotlin Gradle Plugin) | 🟡 In progress | Kotlin support available in prototypes |
-| KMP (Kotlin Multiplatform) | 🟡 Prototype | `kotlinMultiplatform` Software Type exists in unified-prototype |
+| KMP (Kotlin Multiplatform) | 🟡 Prototype | `kotlinMultiplatform` Project Type exists in unified-prototype |
 | Hilt / Dagger | ❓ Unknown | Symbol processing plugins need adaptation |
 | Navigation SafeArgs | ❓ Unknown | Code generation at config time is problematic |
 | Room / KSP | 🟡 Partial | KSP itself needs to be DCL-aware |
@@ -783,7 +787,7 @@ BUILD SUCCESSFUL with 3 isolation violations
 - <span style="color:#ef4444;">Don't</span> access `project.rootProject` configuration at config time
 - <span style="color:#ef4444;">Don't</span> register tasks in other projects from your plugin
 - <span style="color:#3DDC84;">Do</span> use lazy configuration APIs: `Property<T>`, `Provider<T>`, `TaskProvider`
-- <span style="color:#3DDC84;">Do</span> consider creating a Software Type if your plugin defines a project archetype
+- <span style="color:#3DDC84;">Do</span> consider creating a Project Type if your plugin defines a project archetype
 - <span style="color:#3DDC84;">Do</span> test with `--isolated-projects` to validate compatibility
 
 </div>
@@ -826,7 +830,7 @@ plugins {
 <div>
 <div style="flex:1; min-width:0; font-size:0.8em;">
 
-**DCL** (implicit via Software Type + Features):
+**DCL** (implicit via Project Type + Features):
 </div>
 <div style="font-size:1.0em;">
 
@@ -855,11 +859,11 @@ androidLibrary {
 </div>
 </div>
 
-- No `plugins {}` block in DCL - Software Type handles plugin application
+- No `plugins {}` block in DCL - Project Type handles plugin application
 - **Project Features** add opt-in capabilities (registered in settings)
 - If not referenced, zero cost
 
-> Speaker Notes: In DCL, you don't apply plugins in build files. The ecosystem plugin in settings registers Software Types, and Project Features add capabilities. Plugin application is handled by the framework, not the developer. Project Features are the extension mechanism - they're like plugins but scoped and typed. kotlinSerialization, testing, hilt - each is a feature you opt into per project. You only pay for what you use, and the IDE knows exactly what's available in the current scope.
+> Speaker Notes: In DCL, you don't apply plugins in build files. The ecosystem plugin in settings registers Project Types, and Project Features add capabilities. Plugin application is handled by the framework, not the developer. Project Features are the extension mechanism - they're like plugins but scoped and typed. kotlinSerialization, testing, hilt - each is a feature you opt into per project. You only pay for what you use, and the IDE knows exactly what's available in the current scope. [TRANSITION: So how do you get from your KTS build to this?]
 
 ---
 
@@ -871,13 +875,13 @@ androidLibrary {
 <span style="background:#f5a623; color:#000; padding:8px 14px; border-radius:6px; font-size:0.7em; font-weight:bold;">Fix Violations</span><span style="color:#00c9db; font-size:1.2em;">→</span>
 <span style="background:#00c9db; color:#000; padding:8px 14px; border-radius:6px; font-size:0.7em; font-weight:bold;">Convert Settings</span><span style="color:#00c9db; font-size:1.2em;">→</span>
 <span style="background:#00c9db; color:#000; padding:8px 14px; border-radius:6px; font-size:0.7em; font-weight:bold;">Migrate Leaf Modules</span><span style="color:#3DDC84; font-size:1.2em;">→</span>
-<span style="background:#3DDC84; color:#000; padding:8px 14px; border-radius:6px; font-size:0.7em; font-weight:bold;">Custom Software Types</span><span style="color:#3DDC84; font-size:1.2em;">→</span>
+<span style="background:#3DDC84; color:#000; padding:8px 14px; border-radius:6px; font-size:0.7em; font-weight:bold;">Custom Project Types</span><span style="color:#3DDC84; font-size:1.2em;">→</span>
 <span style="background:#3DDC84; color:#000; padding:8px 14px; border-radius:6px; font-size:0.7em; font-weight:bold;">Full DCL Build</span>
 </div>
 
 You can stop at any point. Each step improves your build independently.
 
-> Speaker Notes: Migration journey overview. Every step provides standalone value. Fixing isolated projects violations makes your build faster today. Converting settings to DCL centralizes your defaults today. You don't need to go all the way to get benefits.
+> Speaker Notes: Migration journey overview. Every step provides standalone value. Fixing isolated projects violations makes your build faster today. Converting settings to DCL centralizes your defaults today. You don't need to go all the way to get benefits. [TRANSITION: So where do you start? It depends on your scale.]
 
 ---
 
@@ -897,7 +901,7 @@ You can stop at any point. Each step improves your build independently.
 - Pure library (no app module)
 - Minimal plugin applications
 
-> Speaker Notes: This is what everyone asks: where do I start? The answer depends on your scale. For small projects, you can often convert everything in a day. For large projects, you need a strategy. Leaf modules - the ones at the bottom of your dependency graph with no downstream consumers of their build logic - are always the safest first step. They tend to be simple utility libraries with no custom configuration.
+> Speaker Notes: For small projects, you can often convert everything in a day. For large projects, you need a strategy. Leaf modules - the ones at the bottom of your dependency graph with no downstream consumers of their build logic - are always the safest first step. They tend to be simple utility libraries with no custom configuration. [TRANSITION: Once you've picked targets, here are the rules of the road.]
 
 ---
 
@@ -918,24 +922,6 @@ You can stop at any point. Each step improves your build independently.
 ```
 
 > Speaker Notes: The most common mistake is trying to migrate your app module first - it always has the most custom logic, signing configs, build types, flavor dimensions. Start with the boring utility modules. Get confidence. Build muscle memory. Then tackle the complex ones.
-
----
-
-<!-- .slide: data-visibility="hidden" -->
-
-# Migration Path: Step by Step
-
-1. **Identify simple leaf modules** - start there
-2. **Remove `allprojects`/`subprojects`** - move to convention plugins or settings defaults
-3. **Convert settings to DCL** - `settings.gradle.dcl`
-4. **Convert simple projects** - libraries with no custom logic
-5. **Set up composite build** for custom Software Types
-6. **Create custom Project Types** for your conventions
-7. **Convert complex projects** incrementally
-8. **Extract common config** to settings defaults
-
-
-> Speaker Notes: This is the official migration path from Gradle. Start with your leaf modules - the ones with the least custom logic. Work your way up. You can mix DCL and KTS files in the same build during migration.
 
 ---
 
@@ -1003,7 +989,7 @@ androidLibrary {
 
 **Where did everything else go?**
 - `compileSdk`, `minSdk`, `jdkVersion` → **settings defaults**
-- Plugin application → **Software Type**
+- Plugin application → **Project Type**
 - `compileOptions`/`kotlinOptions` → **derived from jdkVersion**
 
 </div>
@@ -1011,11 +997,11 @@ androidLibrary {
 </div>
 </div>
 
-> Speaker Notes: [PACING: Give 4 seconds for the side-by-side comparison to land.] Let's take a look at a before and after kts -> dcl migration. On the left side is a typical library module today; 35+ lines, most of which is identical boilerplate across every module. On the right side is the same module in DCL. 14 lines. Where did everything go? compileSdk, minSdk, jdkVersion all move to settings defaults, defined once for the entire project. Plugin application is handled by the Software Type. compileOptions and kotlinOptions are derived automatically from jdkVersion. What's left is only what's unique to this module: its namespace and its dependencies. [TRANSITION: Let's look at a more complex migration involving a convention plugin.]
+> Speaker Notes: [PACING: Give 4 seconds for the side-by-side comparison to land.] Let's take a look at a before and after kts -> dcl migration. On the left side is a typical library module today; 35+ lines, most of which is identical boilerplate across every module. On the right side is the same module in DCL. 14 lines. Where did everything go? compileSdk, minSdk, jdkVersion all move to settings defaults, defined once for the entire project. Plugin application is handled by the Project Type. compileOptions and kotlinOptions are derived automatically from jdkVersion. What's left is only what's unique to this module: its namespace and its dependencies. [TRANSITION: Let's look at a more complex migration involving a convention plugin.]
 
 ---
 
-# Complex Migration: Convention Plugin to Software Type
+# Migration: Convention Plugin to Project Type
 
 <div style="display:flex; gap:20px; align-items:flex-start;">
 <div style="flex:1; min-width:0; font-size:1.0em;">
@@ -1034,24 +1020,35 @@ android {
 ```
 
 </div>
-<div style="flex:1; min-width:0; font-size:1.0em;">
+<div style="flex:1; min-width:0; font-size:0.9em;">
 
-**After** (custom Software Type):
+**After** (custom Project Type):
 ```kotlin
-// build-logic/src/main/kotlin/MyAndroidLibraryType.kt
-@SoftwareType(name = "myAndroidLibrary")
-abstract class MyAndroidLibraryType {
-    abstract val namespace: Property<String>
-    abstract val dependencies: DependencyCollector
+// build-logic/ - Gradle project-features binding API
 
-    // Convention plugin logic moves here:
-    fun apply(project: Project) {
-        project.plugins.apply("com.android.library")
-        project.plugins.apply("org.jetbrains.kotlin.android")
-        project.android {
-            compileSdk = 35
-            defaultConfig { minSdk = 26 }
-        }
+// 1. The Plugin<Project> is just a marker that carries the binding:
+@BindsProjectType(MyAndroidLibraryBinding::class)
+abstract class MyAndroidLibraryPlugin : Plugin<Project>
+
+// 2. The binding names the .dcl block + points at an apply action:
+class MyAndroidLibraryBinding : ProjectTypeBinding {
+    override fun bind(builder: ProjectTypeBindingBuilder) {
+        builder.bindProjectType(
+            "myAndroidLibrary",
+            MyAndroidLibraryApplyAction::class,
+        )
+    }
+}
+
+// 3. Your convention-plugin code moves into the apply action:
+abstract class MyAndroidLibraryApplyAction :
+    ProjectTypeApplyAction<MyAndroidLibraryDefinition, BuildModel.None> {
+    override fun apply(
+        context: ProjectFeatureApplicationContext,
+        definition: MyAndroidLibraryDefinition,
+        buildModel: BuildModel.None,
+    ) {
+        // the logic from your old convention plugin
     }
 }
 ```
@@ -1059,7 +1056,73 @@ abstract class MyAndroidLibraryType {
 </div>
 </div>
 
-> Speaker Notes: [PACING: 3 seconds for the side-by-side.] For enterprises with convention plugins, the migration path is pretty direct. One the left side is your convention plugin today. One the right side is the same logic formalized as a Software Type. Notice that the apply function contains the exact same code that was in your convention plugin. The difference is the class also declares the typed surface that developers see in their .dcl files. The namespace and dependencies properties become the only things a developer configures. Everything else is handled by the implementation. If you already have convention plugins, you are 80% of the way there. [TRANSITION: Now let's talk about the common pitfalls you'll hit during migration.]
+> Speaker Notes: [PACING: 3 seconds for the side-by-side.] For enterprises with convention plugins, the migration path is pretty direct. On the left is your convention plugin today. On the right is the same logic formalized as a Project Type using Gradle's project-features binding API - three pieces. First, the Plugin<Project> is now just a marker: it carries a @BindsProjectType annotation and has no logic of its own. Second, a small binding class names the 'myAndroidLibrary' DCL block and points at an apply action. Third - and this is the key move - the exact imperative code from your convention plugin, applying AGP and setting compileSdk, relocates into the ApplyAction's apply method. BuildModel.None just means this Project Type carries no separate build-model object; the typed definition interface from the earlier slide is enough. One gotcha worth naming: reaching the Android extension needs a Project, which isn't a default apply-action service, so you inject Project and mark the binding withUnsafeApplyAction() when you add that logic. If you already have convention plugins, you're 80% of the way there - the binding is just ceremony around logic you already wrote. [TRANSITION: Now let's talk about the common pitfalls you'll hit during migration.]
+
+---
+
+# Migration: Convention Plugin to Project Type
+
+<p style="font-size:0.72em; margin:0 0 6px 0;">Inside the apply action, <code>context</code> only offers <code>getBuildModel()</code>. The real power comes from <strong style="color:#3DDC84;">injected, isolation safe services</strong>.</p>
+
+</p>
+
+<div style="display:flex; gap:16px; align-items:flex-start;">
+<div style="flex:1; min-width:0;">
+<p style="font-size:0.78em; margin:0 0 4px 0;"><strong style="color:#3DDC84;">Safe path</strong>, no <code>Project</code>:</p>
+<div style="font-size:0.9em;">
+
+```kotlin
+abstract class MyAndroidLibraryApplyAction : /* ... */ {
+
+    // Injected the same way a task gets services:
+    @get:Inject abstract val tasks: TaskRegistrar
+    @get:Inject abstract val configurations: ConfigurationRegistrar
+    @get:Inject abstract val layout: ProjectFeatureLayout
+
+    override fun apply(/* context, definition, buildModel */) {
+        configurations.dependencyScope("moduleApi")
+
+        val out = layout.contextBuildDirectory.map { it.dir("info") }
+        tasks.register("generateInfo", GenerateInfoTask::class.java) { t ->
+            t.namespace.set(definition.namespace)   // lazy Provider wiring
+            t.outputDirectory.set(out)
+        }
+    }
+}
+```
+
+</div>
+</div>
+<div style="flex:1; min-width:0;">
+<p style="font-size:0.78em; margin:0 0 4px 0;"><strong style="color:#f5a623;">Escape hatch</strong>, when you need <code>Project</code>:</p>
+<div style="font-size:1.0em;">
+
+```kotlin
+// 1. The binding must opt in:
+builder.bindProjectType(
+    "myAndroidLibrary",
+    MyAndroidLibraryApplyAction::class,
+).withUnsafeApplyAction()
+
+// 2. Only now can the action inject the real Project:
+abstract class MyAndroidLibraryApplyAction : /* ... */ {
+
+    @get:Inject abstract val project: Project
+
+    override fun apply(/* context, definition, buildModel */) {
+        project.plugins.apply("com.android.library")
+        project.extensions.configure<LibraryExtension>("android") {
+            namespace = definition.namespace.get()
+        }
+    }
+}
+```
+
+</div>
+</div>
+</div>
+
+> Speaker Notes: [PACING: Dense code slide - give 6-8 seconds, then walk each side.] So what actually goes inside that apply action since the context object you're handed has exactly one method, getBuildModel. Where does the configuration power come from? Injection. Gradle instantiates your apply action as a managed type, the same way it does a task, so you declare services with @Inject. On the left is the safe path: TaskRegistrar to register tasks, ConfigurationRegistrar for role-locked configurations, ProjectFeatureLayout for output directories. Everything is lazy - definition.namespace is a Provider wired straight into the task, nothing is resolved at configuration time, and nothing reaches outside this project. That's what makes parallel configuration safe. On the right is the escape hatch. Applying AGP needs the real Project and the safe API can't express that yet. So you call withUnsafeApplyAction() on the binding and only then are you allowed to inject Project. [TRANSITION: With the mechanics covered, let's talk about the pitfalls you'll hit.]
 
 ---
 
@@ -1067,12 +1130,13 @@ abstract class MyAndroidLibraryType {
 
 1. **Can't use `if`/`when` in DCL** - no conditional logic in build files
 2. **Can't call functions** - no `file()`, `rootProject.file()`, etc.
-3. **Can't use variables** - everything is a direct assignment
-4. **One Software Type per project** - can't mix `androidLibrary` + `javaLibrary`
-5. **Feature ordering doesn't matter** - but may trip up imperative thinkers
-6. **No `ext` properties in DCL files** - use typed Software Type properties instead
+3. **No version catalogs in `.dcl` yet** - convert `libs.x` to GAV coords (`org:lib:1.4`)
+4. **One Project Type per project** - can't mix `androidLibrary` + `javaLibrary`
+5. **Can't use variables** - everything is a direct assignment
+6. **Feature ordering doesn't matter** - but may trip up imperative thinkers
+7. **No `ext` properties in DCL files** - use typed Project Type properties instead
 
-> Speaker Notes: These are the gotchas. If you have conditional configuration - like different behavior per build type that's computed - that logic moves into the Software Type implementation. The DCL file stays pure. On the ext properties point: this only applies to .dcl files. Your Software Type implementation code (in the included build) can still use extra properties, full Kotlin, whatever it needs. The restriction is on the consumer-facing config surface. If you relied on ext properties to pass data between build scripts, the DCL answer is to define typed properties on the Software Type instead.
+> Speaker Notes: These are the gotchas. If you have conditional configuration - like different behavior per build type that's computed - that logic moves into the Project Type implementation. The DCL file stays pure. The version catalog one surprises people: today, fully declarative .dcl files can't reference libs.x accessors, so you convert them back to plain GAV coordinates like org:lib:1.4. Version catalogs still work in the .kts files during the intermediate migration, and Gradle has said catalog support in DCL is coming in a future EAP - but as of today it's a real footgun. On the ext properties point: this only applies to .dcl files. Your Project Type implementation code (in the included build) can still use extra properties, full Kotlin, whatever it needs. If you relied on ext properties to pass data between build scripts, the DCL answer is to define typed properties on the Project Type instead.
 
 ---
 
@@ -1105,7 +1169,7 @@ dependencyResolutionManagement {
 
 | Your Convention Plugin Today | In DCL |
 |---|---|
-| applies AGP/KGP | → implicit (via Software Type) |
+| applies AGP/KGP | → implicit (via Project Type) |
 | sets compileSdk, minSdk, targetSdk | → settings defaults |
 | configures signing | → project feature |
 | wires test dependencies | → project feature |
@@ -1116,7 +1180,7 @@ dependencyResolutionManagement {
 If your build already consolidates logic into a centralized plugin...
 **you're already thinking like DCL.**
 
-The migration is: formalize what you have into the Software Type API.
+The migration is: formalize what you have into the Project Type API.
 
 > Speaker Notes: If your enterprise has invested in a build-configuration plugin that centralizes decisions - congratulations, you've been building toward DCL without knowing it. The conceptual model is the same. The API formalization is what's new.
 
@@ -1128,7 +1192,7 @@ The migration is: formalize what you have into the Software Type API.
 graph TD
     A[Today: root build.gradle.kts] -->|moves to| B[Included Build]
     C[Today: buildSrc] -->|becomes| B
-    D[Today: convention plugins] -->|formalize as| E[Software Type Plugin]
+    D[Today: convention plugins] -->|formalize as| E[Project Type Plugin]
     E -->|registered in| F[settings.gradle.dcl]
     B -->|contains| E
     F -->|applies to| G[Project .gradle.dcl files]
@@ -1138,11 +1202,11 @@ graph TD
 |---|---|
 | `buildSrc/` | Included build (`build-logic/`) |
 | Root `build.gradle.kts` tasks | Included build or lifecycle plugin |
-| Convention plugins | Software Type definitions |
+| Convention plugins | Project Type definitions |
 | `allprojects {}` / `subprojects {}` | `defaults {}` block in settings |
 | Custom task registration | Included build plugin |
 
-> Speaker Notes: This is the question everyone asks after seeing DCL examples - "ok but where does all my custom stuff go?" The answer is included builds. Your buildSrc becomes a proper included build, typically named build-logic. Your convention plugins become Software Type definitions inside that included build. Your root build.gradle.kts tasks move into plugins registered from the included build. Build logic doesn't disappear. It just moves to the right layer. Developers see clean DCL files. Build engineers maintain the included build with full Kotlin power.
+> Speaker Notes: This is the question everyone asks after seeing DCL examples - "ok but where does all my custom stuff go?" The answer is included builds. Your buildSrc becomes a proper included build, typically named build-logic. Your convention plugins become Project Type definitions inside that included build. Your root build.gradle.kts tasks move into plugins registered from the included build. Build logic doesn't disappear. It just moves to the right layer. Developers see clean DCL files. Build engineers maintain the included build with full Kotlin power.
 
 ---
 
@@ -1174,15 +1238,15 @@ graph TD
 
 # DCL Status and Compatibility Matrix
 
-| Component | Status (as of EAP3, April 2025) |
+| Component | Status |
 |---|---|
 | DCL file format (`.gradle.dcl`) | ✅ Experimental |
 | Android ecosystem plugin | ✅ Prototype available |
 | Kotlin ecosystem plugin | ✅ Prototype available |
 | Java ecosystem plugin | ✅ Prototype available |
-| `gradle init` with DCL | ✅ Available (Gradle 8.12+) |
+| `gradle init` with DCL | ✅ Available (since Gradle 8.12) |
 | Android Studio support | ✅ Nightly builds |
-| IntelliJ IDEA support | ✅ 2025.2 EAP |
+| IntelliJ IDEA support | ✅ Available |
 | VS Code extension | ✅ Available |
 | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px; border-left:3px solid #ef4444;">Production readiness</span> | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px;">❌ <strong style="color:#ef4444;">Not yet</strong></span> |
 | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px; border-left:3px solid #ef4444;">Plugin author adoption</span> | <span style="background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:4px;">❌ <strong style="color:#ef4444;">Not yet</strong></span> |
@@ -1191,20 +1255,21 @@ graph TD
 <p style="font-size:0.72em; font-style:italic; margin:0;">"Declarative Gradle is <strong>ready</strong> for trying out our provided sample projects. Declarative Gradle is <strong style='color:#ef4444;'>not ready</strong> for adoption by plugin authors, build engineers or software engineers."<span style="color:#f5a623;"> - Official docs</span></p>
 </div>
 
-> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] Look at the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. Gradle's official docs state: "Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers." I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. [TRANSITION: Here's where it's heading.]
+> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] Look at the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. Gradle's official docs state: "Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers." I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. One nuance on that timestamp: the standalone EAP dates to April 2025, but a lot of the recent movement - like the Project Types rename - has been shipping in core Gradle releases. Watch the mainline distribution, not just the EAP repo, to see where it's really going. [TRANSITION: Here's where it's heading.]
 
 ---
 
 # Roadmap (from Gradle)
 
-<div style="position:relative; padding-left:40px; margin-top:20px;">
-<div style="position:absolute; left:14px; top:8px; bottom:8px; width:3px; background:linear-gradient(to bottom, #3DDC84, #00c9db, #f5a623); border-radius:2px;"></div>
-<div style="position:relative; margin-bottom:18px;"><span style="position:absolute; left:-33px; top:4px; width:14px; height:14px; background:#3DDC84; border-radius:50%; border:2px solid #fff;"></span><strong style="color:#3DDC84;">EAP1</strong> <span style="color:#888;">(July 2024)</span><br><span style="font-size:0.85em;">Initial samples, IDE prototypes</span></div>
-<div style="position:relative; margin-bottom:18px;"><span style="position:absolute; left:-33px; top:4px; width:14px; height:14px; background:#3DDC84; border-radius:50%; border:2px solid #fff;"></span><strong style="color:#3DDC84;">EAP2</strong> <span style="color:#888;">(November 2024)</span><br><span style="font-size:0.85em;">Enhanced IDE support, more samples</span></div>
-<div style="position:relative; margin-bottom:18px;"><span style="position:absolute; left:-33px; top:4px; width:14px; height:14px; background:#00c9db; border-radius:50%; border:2px solid #fff; box-shadow:0 0 8px rgba(0,201,219,0.6);"></span><strong style="color:#00c9db;">EAP3</strong> <span style="color:#888;">(April 2025)</span> <span style="color:#f5a623; font-size:0.8em;">← We are here</span><br><span style="font-size:0.85em;">Eclipse support, refinements, Now in Android sample</span></div>
-<div style="position:relative; margin-bottom:18px;"><span style="position:absolute; left:-33px; top:4px; width:14px; height:14px; background:#555; border-radius:50%; border:2px solid #888;"></span><strong style="color:#ccc;">EAP4</strong> <span style="color:#888;">(Next)</span><br><span style="font-size:0.85em;">Further refinements</span></div>
-<div style="position:relative; margin-bottom:18px;"><span style="position:absolute; left:-33px; top:4px; width:14px; height:14px; background:#555; border-radius:50%; border:2px solid #888;"></span><strong style="color:#ccc;">Incubating</strong> <span style="color:#888;">(Future)</span><br><span style="font-size:0.85em;">Project Types and DCL stabilizing</span></div>
-<div style="position:relative; margin-bottom:18px;"><span style="position:absolute; left:-33px; top:4px; width:14px; height:14px; background:#f5a623; border-radius:50%; border:2px solid #fff;"></span><strong style="color:#f5a623;">Stable</strong> <span style="color:#888;">(Future)</span><br><span style="font-size:0.85em;">Production-ready Project Types and DCL</span></div>
+<div style="position:relative; padding-left:40px; margin-top:6px; font-size:0.82em;">
+<div style="position:absolute; left:14px; top:6px; bottom:6px; width:3px; background:linear-gradient(to bottom, #3DDC84, #00c9db, #f5a623); border-radius:2px;"></div>
+<div style="position:relative; margin-bottom:9px;"><span style="position:absolute; left:-33px; top:4px; width:12px; height:12px; background:#3DDC84; border-radius:50%; border:2px solid #fff;"></span><strong style="color:#3DDC84;">EAP1</strong> <span style="color:#888;">(July 2024)</span><br><span style="font-size:0.82em;">Initial samples, IDE prototypes</span></div>
+<div style="position:relative; margin-bottom:9px;"><span style="position:absolute; left:-33px; top:4px; width:12px; height:12px; background:#3DDC84; border-radius:50%; border:2px solid #fff;"></span><strong style="color:#3DDC84;">EAP2</strong> <span style="color:#888;">(November 2024)</span><br><span style="font-size:0.82em;">Enhanced IDE support, more samples</span></div>
+<div style="position:relative; margin-bottom:9px;"><span style="position:absolute; left:-33px; top:4px; width:12px; height:12px; background:#3DDC84; border-radius:50%; border:2px solid #fff;"></span><strong style="color:#3DDC84;">EAP3</strong> <span style="color:#888;">(April 2025)</span> <span style="color:#888; font-size:0.8em;">latest standalone EAP</span><br><span style="font-size:0.82em;">Eclipse support, refinements, Now in Android sample</span></div>
+<div style="position:relative; margin-bottom:9px;"><span style="position:absolute; left:-33px; top:4px; width:12px; height:12px; background:#00c9db; border-radius:50%; border:2px solid #fff; box-shadow:0 0 8px rgba(0,201,219,0.6);"></span><strong style="color:#00c9db;">Landing in core Gradle</strong> <span style="color:#888;">(2026)</span> <span style="color:#f5a623; font-size:0.8em;">← We are here</span><br><span style="font-size:0.82em;">DCL groundwork shipping in mainline Gradle</span></div>
+<div style="position:relative; margin-bottom:9px;"><span style="position:absolute; left:-33px; top:4px; width:12px; height:12px; background:#555; border-radius:50%; border:2px solid #888;"></span><strong style="color:#ccc;">Next standalone EAP</strong> <span style="color:#888;">(TBD)</span><br><span style="font-size:0.82em;">Samples catch up to core</span></div>
+<div style="position:relative; margin-bottom:9px;"><span style="position:absolute; left:-33px; top:4px; width:12px; height:12px; background:#555; border-radius:50%; border:2px solid #888;"></span><strong style="color:#ccc;">Incubating</strong> <span style="color:#888;">(Future)</span><br><span style="font-size:0.82em;">Project Types and DCL stabilizing</span></div>
+<div style="position:relative; margin-bottom:0;"><span style="position:absolute; left:-33px; top:4px; width:12px; height:12px; background:#f5a623; border-radius:50%; border:2px solid #fff;"></span><strong style="color:#f5a623;">Stable</strong> <span style="color:#888;">(Future)</span><br><span style="font-size:0.82em;">Production-ready Project Types and DCL</span></div>
 </div>
 
 
@@ -1227,7 +1292,7 @@ graph TD
 | `.windsurf/workflows/migrate-to-dcl.md` | Windsurf (Cascade) |
 | `.claude/commands/dcl-migration-check.md` | Claude Code |
 
-<p style="text-align:center; margin-top:16px; font-size:0.85em;"><strong style="color:#00c9db;">github.com/cof-sandbox/gradle-dcl-droidcon-2026</strong></p>
+<p style="text-align:center; margin-top:16px; font-size:0.85em;"><strong style="color:#00c9db;">github.com/wildsmith/droidcon-2026</strong></p>
 
 > Speaker Notes: Before I walk through the details, I want to highlight that there's an open-source AI migration skill in the same GitHub repo as these slides. Two versions, one for Windsurf and one for Claude Code. You can clone the repo, drop the file into your project, and run it against your build files. If you're on a different AI coding assistant, the markdown is self-explanatory enough to adapt.
 
@@ -1244,32 +1309,12 @@ graph TD
 1. <strong style="color:#00c9db;">Analyze</strong> your current build files for DCL readiness
 2. <strong style="color:#00c9db;">Identify</strong> Isolated Projects violations
 3. <strong style="color:#00c9db;">Generate</strong> equivalent DCL configurations
-4. <strong style="color:#00c9db;">Create</strong> custom Software Type scaffolding
+4. <strong style="color:#00c9db;">Create</strong> custom Project Type scaffolding
 5. <strong style="color:#00c9db;">Detect</strong> incompatible plugin patterns
 
 </div>
 
-> Speaker Notes: At Capital One, we have thousands of modules. Manual migration is not realistic. So what can AI tooling do? A few things. Analyze your current build files for DCL readiness - are they simple enough to convert? Identify Isolated Projects violations - the cross-project patterns that block you. Generate equivalent DCL configurations from your existing KTS files. Scaffold custom Software Types based on what your convention plugins already do. And detect incompatible plugin patterns like afterEvaluate or rootProject access.
-
----
-
-<!-- .slide: data-visibility="hidden" -->
-
-# AI Migration Skill: Architecture
-
-<div class="mermaid">
-flowchart TD
-    A[build.gradle.kts files] --> B[Scan & Parse]
-    B --> C{Imperative Logic?}
-    C -->|No| D[Generate .gradle.dcl]
-    C -->|Yes| E[Report Blockers]
-    B --> F[Check Cross-Project Access]
-    F --> C
-    D --> G[Migration Report]
-    E --> G
-</div>
-
-> Speaker Notes: We've prototyped a skill for AI coding assistants that works with both Claude Code and Windsurf. It scans your build files, identifies what can be migrated today, what's blocked, and generates the DCL equivalent.
+> Speaker Notes: At Capital One, we have thousands of modules. Manual migration is not realistic. So what can AI tooling do? A few things. Analyze your current build files for DCL readiness - are they simple enough to convert? Identify Isolated Projects violations - the cross-project patterns that block you. Generate equivalent DCL configurations from your existing KTS files. Scaffold custom Project Types based on what your convention plugins already do. And detect incompatible plugin patterns like afterEvaluate or rootProject access.
 
 ---
 
@@ -1282,17 +1327,18 @@ flowchart TD
 
 📊 **Readiness: ✅ Ready**
 
-**Software Type:** `androidLibrary`
+**Project Type:** `androidLibrary`
 
 ### Generated DCL:
 androidLibrary {
     namespace = "com.example.core.network"
     dependencies {
-        implementation(libs.okhttp)
+        // libs.okhttp converted to GAV (no catalogs in .dcl yet):
+        implementation("com.squareup.okhttp3:okhttp:4.12.0")
     }
     testing {
         dependencies {
-            implementation(libs.junit)
+            implementation("junit:junit:4.13.2")
         }
     }
 }
@@ -1318,17 +1364,17 @@ androidLibrary {
 
 📊 **Readiness: ❌ Not Ready**
 
-**Software Type:** `androidApplication`
+**Project Type:** `androidApplication`
 
 ### ❌ Hard Blockers (4 found):
 1. **Line 15**: `if (isCI) { ... }` (Conditional logic)
-   → Move to convention plugin or Software Type implementation
+   → Move to convention plugin or Project Type implementation
 2. **Line 32**: `project(":core").android.compileSdk` (Cross-project access)
    → Use proper dependency declarations
 3. **Line 45**: `tasks.register("customTask") { ... }` (Custom task)
    → Move to included build plugin
 4. **Line 58**: `extra["buildTimestamp"] = ...` (Extra properties)
-   → Replace with typed Software Type properties
+   → Replace with typed Project Type properties
 ```
 
 </div>
@@ -1337,63 +1383,9 @@ androidLibrary {
 
 ---
 
-<!-- .slide: data-visibility="hidden" -->
-
-# AI Migration Skill: Full Definition
-
-```yaml
-# .windsurf/workflows/migrate-to-dcl.md
----
-description: Analyze build files for DCL migration readiness
-  and Isolated Projects compatibility
----
-
-## Pre-Scan: Check Gradle version, Groovy files, composite builds
-## Steps:
-1. Parse version catalog (libs.versions.toml) + detect projects catalog
-2. Classify module Software Type (androidApplication, androidLibrary, etc.)
-3. Scan for DCL blockers, warnings, Isolated Projects violations
-4. Assess readiness: ✅ Ready | ⚠️ Nearly Ready | 🔶 Has Blockers | ❌ Not Ready
-5. Generate .gradle.dcl with version catalog refs (libs.x, projects.x)
-6. Generate settings.gradle.dcl (pluginManagement, dependencyResolutionManagement, defaults)
-7. Output structured migration report
-8. Offer to perform migration (create files, auto-fix mechanical violations)
-9. Suggest validation commands (--isolated-projects, --dry-run)
-```
-
-> Speaker Notes: This is the actual workflow definition you'd drop into your Windsurf or Claude Code configuration. It's a structured playbook the AI follows - pre-scan checks, classify, assess, generate, migrate, validate. It handles version catalogs, the projects catalog for type-safe project dependencies, and sorts dependencies alphabetically.
-
----
-
-<!-- .slide: data-visibility="hidden" -->
-
-# AI Migration Skill: Claude Code Command
-
-```yaml
-# .claude/commands/dcl-migration-check.md
----
-description: Check a module's readiness for Declarative Gradle
-  and Isolated Projects
----
-
-Analyze Gradle build files at $ARGUMENTS for DCL migration.
-
-## Pre-Scan: Gradle version, Groovy files, composite builds
-## Steps:
-1. Parse version catalog + detect projects catalog
-2. Classify Software Type, scan for blockers/violations
-3. Assess: ✅ Ready | ⚠️ Nearly Ready | 🔶 Has Blockers | ❌ Not Ready
-4. Generate .gradle.dcl with libs.x and projects.x refs
-5. Output report with blockers, fixes, and generated DCL
-6. Offer migration (create files, auto-fix mechanical violations)
-7. Suggest validation commands
-```
-
-> Speaker Notes: Here's the Claude Code version. You invoke it with a file path and it gives you a readiness category, blocker list, and the generated DCL if the module is Ready or Nearly Ready. Works today for analyzing your build files.
-
----
-
 # AI Migration Skill: In Action
+
+<div style="font-size:0.9em;">
 
 ```bash
 $ claude dcl-migration-check core/network/build.gradle.kts
@@ -1404,9 +1396,9 @@ $ claude dcl-migration-check core/network/build.gradle.kts
 
 ### ✅ Compatible:
 - Plugin: com.android.library
-- Dependencies: 8 (all using version catalog)
+- Dependencies: 8 (catalog refs converted to GAV for .dcl)
 - Namespace: com.example.core.network
-- Version catalog: gradle/libs.versions.toml detected
+- Version catalog: gradle/libs.versions.toml detected (inlined to GAV)
 
 ### ⚠️ Warnings:
 - `kotlinOptions { jvmTarget = "17" }` 
@@ -1419,22 +1411,24 @@ $ claude dcl-migration-check core/network/build.gradle.kts
 androidLibrary {
     namespace = "com.example.core.network"
     dependencies {
-        implementation(libs.okhttp)
-        implementation(libs.kotlinx.serialization.json)
+        implementation("com.squareup.okhttp3:okhttp:4.12.0")
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     }
     kotlinSerialization {
-        version = libs.versions.kotlinx.serialization
+        version = "1.6.3"
         jsonEnabled = true
     }
     testing {
         dependencies {
-            implementation(libs.mockk)
+            implementation("io.mockk:mockk:1.13.8")
         }
     }
 }
 ```
 
-> Speaker Notes: This is what the output looks like in practice. The module is classified as Ready - zero hard blockers. The only action item is a Warning: kotlinOptions should be derived from jdkVersion in settings defaults. Notice the generated DCL uses version catalog references (libs.okhttp) instead of raw strings. Most leaf modules in well-maintained projects will be Ready or Nearly Ready.
+</div>
+
+> Speaker Notes: This is what the output looks like in practice. The module is classified as Ready - zero hard blockers. The only action item is a Warning: kotlinOptions should be derived from jdkVersion in settings defaults. Notice the generated DCL inlines your version catalog references - libs.okhttp becomes the full GAV coordinate - because fully declarative .dcl files can't use catalog accessors yet. The skill does that conversion for you from your libs.versions.toml. Most leaf modules in well-maintained projects will be Ready or Nearly Ready.
 
 ---
 
@@ -1486,7 +1480,7 @@ cd declarative-samples-android-app
 2. **Run `--isolated-projects`** on your build - see your violations
 3. **Move `allprojects`/`subprojects`** to settings or convention plugins
 4. **Audit your custom plugins** for cross-project access
-5. **Subscribe to [Gradle newsletter](https://newsletter.gradle.org/)** for monthly DCL updates
+5. **Subscribe to [Gradle newsletter](https://newsletter.gradle.org/)** for DCL updates
 6. **Provide feedback** - [github.com/gradle/declarative-gradle](https://github.com/gradle/declarative-gradle/blob/main/docs/feedback.md)
 
 > Speaker Notes: What to do today. You don't have to wait for DCL to be stable to start preparing. Running isolated projects analysis today will surface problems. Removing allprojects/subprojects is good hygiene regardless. Start with the easy wins.
@@ -1495,20 +1489,24 @@ cd declarative-samples-android-app
 
 # FAQ: General
 
+<div style="font-size:0.8em;">
+
 | Question | Short Answer |
 |---|---|
 | Are Isolated Projects required for DCL? | No. They are separate but complementary. |
 | What happens to `settings.gradle.kts`? | Becomes `settings.gradle.dcl` |
 | What happens to root `build.gradle.kts`? | Eliminated; logic moves to included builds |
 | Do `gradle.properties` change? | No. They remain as-is. |
-| **How long until stability?** | **Targeting Gradle 9.0 for Isolated Projects; DCL TBD.** |
+| **How long until stability?** | **Isolated Projects has been maturing across the Gradle 9.x line; DCL itself is still experimental - no committed date.** |
 | **Does DCL replace Kotlin DSL?** | **For project config, yes. Build logic stays KTS.** |
-| What about `buildscript {}` blocks? | Already deprecated. Migrate to `plugins {}` first, then DCL. |
+| What about `buildscript {}` blocks? | Legacy/discouraged. Migrate to `plugins {}` first, then DCL. |
 | Do build scans still work? | Yes. Completely unchanged. |
-| **How does DCL interact with configuration cache?** | **Complementary. Config cache caches task graph; DCL speeds config phase.** |
-| **Is there a risk DCL gets abandoned?** | **Gradle Inc. is fully invested. Monthly EAPs, dedicated team, Google partnership.** |
+| **How does DCL interact with configuration cache?** | **Complementary. Config cache caches the task graph; Isolated Projects builds on it to configure projects in parallel, and DCL speeds the config phase.** |
+| **Is DCL still actively moving forward?** | **Yes - the groundwork has been landing directly in core Gradle (rename, binding API out of `internal`). Dedicated team, Google partnership.** |
 
-> Speaker Notes: Before we get into the Q&A I've noted some FAQs responses: (1) Isolated Projects and DCL are complementary but independent. DCL files are inherently isolated because they cannot contain imperative code. You can adopt either without the other. (2) settings.gradle.kts becomes settings.gradle.dcl which declares plugins, ecosystem configuration, and shared defaults. (3) Root build.gradle.kts is typically eliminated; root-level tasks or logic moves into included build plugins. (4) gradle.properties files remain unchanged - JVM args, feature flags, credentials stay there. (5) Isolated Projects is targeting Gradle 9.0 for stability. DCL itself has no committed date yet. Subscribe to the Gradle newsletter. (6) Long-term, DCL is the intended default for project configuration. Kotlin DSL remains for build logic, included builds, and custom plugins. (7) If you still have buildscript { classpath(...) } blocks, step one is migrating to the plugins {} block. That's a prerequisite before DCL. The buildscript pattern is already deprecated in modern Gradle.
+</div>
+
+> Speaker Notes: Before we get into the Q&A I've noted some FAQs responses: (1) Isolated Projects and DCL are complementary but independent. DCL files are inherently isolated because they cannot contain imperative code. You can adopt either without the other. (2) settings.gradle.kts becomes settings.gradle.dcl which declares plugins, ecosystem configuration, and shared defaults. (3) Root build.gradle.kts is typically eliminated; root-level tasks or logic moves into included build plugins. (4) gradle.properties files remain unchanged - JVM args, feature flags, credentials stay there. (5) Isolated Projects has been maturing across the Gradle 9.x line; DCL itself has no committed stability date yet. Subscribe to the Gradle newsletter. (6) Long-term, DCL is the intended default for project configuration. Kotlin DSL remains for build logic, included builds, and custom plugins. (7) If you still have buildscript { classpath(...) } blocks, step one is migrating to the plugins {} block. That's a prerequisite before DCL. The buildscript pattern is already deprecated in modern Gradle.
 
 ---
 
@@ -1517,12 +1515,12 @@ cd declarative-samples-android-app
 | Question | Short Answer |
 |---|---|
 | Can I mix `.gradle.dcl` and `.gradle.kts`? | Yes. Designed for incremental migration. |
-| Do version catalogs (`libs.versions.toml`) still work? | Yes. Unchanged. DCL handles project config, not dependency versions. |
+| Do version catalogs (`libs.versions.toml`) still work? | In `.kts`, yes. In fully declarative `.dcl` files, **not yet** - inline to GAV coords. |
 | What about Groovy DSL projects? | KTS migration recommended first. Groovy → KTS → DCL is the safest path. |
 | Does `./gradlew assembleDebug` still work? | Yes. Task invocation is unchanged. CI scripts don't change. |
-| Is there a KMP Software Type? | Prototype exists (`kotlinMultiplatform`). Not stable yet. |
+| Is there a KMP Project Type? | Prototype exists (`kotlinMultiplatform`). Not stable yet. |
 
-> Speaker Notes: These are some migration-specific questions. (1) Gradle explicitly supports mixed migration with some projects on DCL and others on KTS in the same build. (2) Version catalogs are completely separate from build scripts - they define dependency coordinates and versions, not project configuration. libs.versions.toml stays exactly as-is. (3) If you're on Groovy, KTS migration first is the safest path. Groovy to KTS to DCL. The syntax translation from Groovy to DCL directly is less well-tested. (4) Task invocation, CI commands, and the entire execution model are unchanged. Only configuration syntax changes. (5) There's a prototype kotlinMultiplatform Software Type in the unified-prototype repo. If you're doing KMP, keep an eye on it.
+> Speaker Notes: These are some migration-specific questions. (1) Gradle explicitly supports mixed migration with some projects on DCL and others on KTS in the same build. (2) Version catalogs are completely separate from build scripts - they define dependency coordinates and versions, not project configuration. libs.versions.toml stays exactly as-is. (3) If you're on Groovy, KTS migration first is the safest path. Groovy to KTS to DCL. The syntax translation from Groovy to DCL directly is less well-tested. (4) Task invocation, CI commands, and the entire execution model are unchanged. Only configuration syntax changes. (5) There's a prototype kotlinMultiplatform Project Type in the unified-prototype repo. If you're doing KMP, keep an eye on it.
 
 ---
 
@@ -1531,70 +1529,36 @@ cd declarative-samples-android-app
 | Question | Short Answer |
 |---|---|
 | What should plugin authors do now? | Test with `--isolated-projects` |
-| **Can my convention plugin become a Software Type?** | **Yes, conceptually the same thing. Why rewrite? You get typed IDE support + tooling mutations.** |
+| **Can my convention plugin become a Project Type?** | **Yes, conceptually the same thing. Why rewrite? You get typed IDE support + tooling mutations.** |
 | What about config-time code generation? | Move to task execution time with `Provider<T>` |
 
 **Key takeaway:** If you already use lazy APIs (`Property<T>`, `Provider<T>`, `TaskProvider`) and avoid cross-project access, you are in good shape.
 
-> Speaker Notes: Plugin authors have the most work ahead. Start by testing with --isolated-projects. Consider whether your plugin should define a Software Type or register Project Features. The DCL docs note that plugin author adoption is "not yet ready" but getting ready now saves you time later. Convention plugins that set compileSdk, minSdk, apply Kotlin, and wire dependencies are essentially Software Types already. The formal API is still experimental. For config-time code gen (annotation processors, code generators, anything inspecting the project graph during configuration), the pattern is to move generation to task execution time using lazy Provider APIs.
-
----
-
-<!-- .slide: data-visibility="hidden" -->
-
-# Real-World Enterprise Gotchas
-
-**From a 2,500+ module Android monorepo:**
-
-1. **"God Plugin" pattern** - one plugin configures AGP, KGP, lint, testing, signing for all modules. Actually *good prep* for DCL, but imperative internals need rearchitecting.
-
-2. **`afterEvaluate` usage** - configures Kotlin compile tasks per variant. Must migrate to `beforeVariants`/`onVariants` AGP APIs.
-
-3. **Conditional config by module type** - `if (isAndroidProject())`. DCL handles this with different Software Types instead.
-
-4. **`extra` properties** - build feature flags. In DCL, these become typed properties on the Software Type.
-
-> Speaker Notes: These are real patterns from our codebase. The god-plugin pattern is actually close to what DCL wants but uses imperative Kotlin code internally. The path forward is converting that to a formal Software Type with typed configuration. afterEvaluate is used in our KotlinConfig.kt to configure compile tasks per variant. Isolated Projects explicitly forbids cross-project access in afterEvaluate. Conditional configuration like `if (isAndroidProject()) { ... } else if (isJavaProject()) { ... }` is eliminated by having different Software Types for each module archetype. Extra properties used for build feature flags like `android.defaults.buildfeatures.buildconfig` become typed properties on the Software Type definition.
-
----
-
-<!-- .slide: data-visibility="hidden" -->
-
-# Real-World Enterprise Gotchas (cont.)
-
-5. **Custom dependency resolution** - binary/source switching for 2,500+ modules at configuration time. **Major blocker.**
-
-6. **Per-project repositories** - credentials + conditional `mavenLocal()`. Moves to `dependencyResolutionManagement` in settings.
-
-7. **Root project tasks** - 40+ CI tasks on root. Likely stays as `.gradle.kts` or moves to included build.
-
-8. **Path-based identity** - `isEasePlugin()`, `isFoundation()` etc. DCL uses Software Type for identity, not filesystem.
-
-> Speaker Notes: The modules-json system is our biggest challenge. It's a sophisticated dependency graph engine that handles binary/source switching, determines what to compile, and optimizes CI. It touches `project` at configuration time and manages resolution strategies cross-project. For projects with similar build-time intelligence, this will be the hardest part of any DCL migration. Repository configuration currently uses credentials from gradle.properties and conditional mavenLocal() for local dev. Root project task registration includes reporting, dependency management, validation, and more. Workspace detection by directory path would be replaced by Software Type identity in the DCL world.
+> Speaker Notes: Plugin authors have the most work ahead. Start by testing with --isolated-projects. Consider whether your plugin should define a Project Type or register Project Features. The DCL docs note that plugin author adoption is "not yet ready" but getting ready now saves you time later. Convention plugins that set compileSdk, minSdk, apply Kotlin, and wire dependencies are essentially Project Types already. The formal API is still experimental. For config-time code gen (annotation processors, code generators, anything inspecting the project graph during configuration), the pattern is to move generation to task execution time using lazy Provider APIs.
 
 ---
 
 # Summary
 
 - **DCL is the future** of Gradle build configuration
-- **EAP3** is available now - experimental, not production-ready
+- **DCL work is landing in core Gradle**, beyond the April 2025 standalone EAP - still experimental, not production-ready
 - **Start preparing** by eliminating `allprojects`/`subprojects`
 - **Run `--isolated-projects`** to see your violation count
 - **Your CI doesn't change** - same commands, same outputs
 - **Security win** - DCL files are auditable, non-executable data
 
-> Speaker Notes: To summarize - DCL is coming. It's not here yet for production, but the direction is clear. The best thing you can do today is prepare: eliminate cross-project patterns, test with isolated projects, and keep an eye on the EAP releases.
+> Speaker Notes: To summarize - DCL is coming. It's not here yet for production, but the direction is clear. The best thing you can do today is prepare: eliminate cross-project patterns, test with isolated projects, and keep an eye on both the EAP samples and the core Gradle releases, which is where the recent DCL work has been landing.
 
 ---
 
 # Summary (cont.)
 
 - **IDE support** exists in Android Studio, IntelliJ, VS Code, Eclipse
-- **Version catalogs, Gradle properties** - all unchanged
+- **Version catalogs** - work in `.kts`, not yet in `.dcl` (inline to GAV); **Gradle properties** unchanged
 - **AI tooling** can accelerate migration when DCL stabilizes
 - **Plugin authors**: test your plugins with Isolated Projects now
 
-> Speaker Notes: And remember - this is NOT a big-bang migration. Your CI doesn't change, your version catalogs don't change, and you can mix DCL and KTS in the same build during the transition. IDE support is real today in nightly builds. AI tooling can help you triage thousands of modules when the time comes.
+> Speaker Notes: And remember - this is NOT a big-bang migration. Your CI doesn't change, and you can mix DCL and KTS in the same build during the transition. One caveat to be precise about: version catalogs keep working in your .kts files, but fully declarative .dcl files can't reference libs.x accessors yet, so those get inlined to GAV coordinates - Gradle says catalog support in DCL is coming. IDE support is real today in nightly builds. AI tooling can help you triage thousands of modules when the time comes.
 
 ---
 
@@ -1681,9 +1645,9 @@ cd declarative-samples-android-app
 - **Slide 21** (Why blocked): "You guys are getting parallel configuration?" (We're the Millers meme)
 - **Slide 30** (Pitfalls): Astronaut meme - "Wait, you can't write code in build files?" / "Never could" 🔫
 - **Slide 33** (Status): "Are we there yet?" Shrek meme - for production readiness
-- **Slide 43** (FAQ): Galaxy brain meme progression: `allprojects` → convention plugin → Software Type → DCL defaults
-- **Slide 45** (Enterprise): "It's the same picture" (corporate needs you to find the difference) - convention plugin vs Software Type
-- **Slide 47** (Insight): Spider-Man pointing at Spider-Man - convention plugin pointing at Software Type
+- **Slide 43** (FAQ): Galaxy brain meme progression: `allprojects` → convention plugin → Project Type → DCL defaults
+- **Slide 45** (Enterprise): "It's the same picture" (corporate needs you to find the difference) - convention plugin vs Project Type
+- **Slide 47** (Insight): Spider-Man pointing at Spider-Man - convention plugin pointing at Project Type
 
 ## Slide Density Guidelines
 - **Code slides**: Max 15-20 lines of code per slide, generous font size (18pt+)
@@ -1691,28 +1655,3 @@ cd declarative-samples-android-app
 - **Comparison slides**: Use columns or tables, never walls of text
 - **FAQ slides**: 3-4 Q&A pairs per slide max - if more, split across slides
 - **Meme slides**: Full-bleed image with minimal overlaid text
-
----
-
-<!-- .slide: data-visibility="hidden" -->
-
-# Appendix: Timing Guide
-
-| Slides | Section | Time |
-|---|---|---|
-| 1-3 | Intro & Agenda | 2 min |
-| 4-8 | Problem & Why DCL | 4 min |
-| 9-14 | Syntax & Examples | 5 min |
-| 15-17 | IDE Support & Tooling | 2 min |
-| 18-20 | Isolated Projects | 3 min |
-| 21-23 | Blockers & Compatibility | 3 min |
-| 24-25 | Plugin Authoring in DCL | 2 min |
-| 26-31 | Migration Path & Pitfalls | 4 min |
-| 32-34 | Violation Reporting & Roadmap | 2 min |
-| 35-38 | AI Migration Tooling (original) | 2 min |
-| 39-42 | Try It & Resources | 2 min |
-| 43-44 | FAQ | 3 min |
-| 45-47 | Enterprise Gotchas & Insights | 3 min |
-| 48-50 | AI Skill Definitions & Demo | 2 min |
-| 51-52 | Summary & Q&A | 5-10 min |
-| **Total** | | **~35 min + Q&A** |
