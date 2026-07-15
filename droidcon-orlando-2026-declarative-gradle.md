@@ -259,7 +259,7 @@ android {
 </div>
 </div>
 
-> Speaker Notes: [PACING: Let the list build tension. Pause after item 4 for the laugh.] Get a laugh here. We've all been there. The mental model mismatch is real: it looks like configuration, but it's actually a full Kotlin program. That's what Declarative Gradle fixes. [TRANSITION: So what IS Declarative Gradle? Let me define it clearly.]
+> Speaker Notes: [PACING: Let the list build tension. Pause after item 4 for the laugh.] We've all been there. The mental model mismatch is real: it looks like configuration, but it's actually a full Kotlin program. That's what Declarative Gradle fixes. [TRANSITION: So what IS Declarative Gradle? Let me define it clearly.]
 
 ---
 
@@ -636,11 +636,13 @@ defaults {
     - `gradle.declarative.ide.support`
 5. Restart
 
-> Speaker Notes: If you want to try this today, here's how. It's a nightly build requirement for now, but the flags are there and it works with the sample projects. [PACING: Pause 5-6 seconds here.] I'll leave this up for a moment, the slides are available online if anyone needs to reference these flags later.
+> Speaker Notes: If you want to try this today, here's how. It's a nightly build requirement for now, but the flags are there and it works with the sample projects. [PACING: Pause 5-6 seconds here.] I'll leave this up for a moment, the slides are available online if anyone needs to reference these flags later. [TRANSITION: Now let's talk about Isolated Projects, a separate but complementary feature.]
 
 ---
 
 # The Gradle Client (Two-Way Tooling)
+
+<!-- .slide: data-visibility="hidden" -->
 
 - **Built by Gradle Inc.** - open-source at [gradle/gradle-client](https://github.com/gradle/gradle-client)
 - Standalone Compose Desktop app for exploring DCL models
@@ -659,7 +661,7 @@ val mutation = AddDependency(
 mutationEngine.apply(mutation)
 ```
 
-> Speaker Notes: [PACING: 2 seconds, then clarify provenance.] This is built by Gradle themselves. It's an open-source Compose Desktop application at github.com/gradle/gradle-client. It's a reference implementation showing what's possible when build files are statically analyzable. The Mutations API is the key concept here: because DCL files are structured data, tooling can safely modify them. Look at the code example. Adding a dependency is a typed operation, not a regex find-and-replace in a Kotlin file. This same API powers IDE refactorings and could power CI bots that auto-update dependencies. The mutations work even on DCL files that have syntax errors, because the parser understands the structure independently of validity. Note: this is currently a standalone app, not baked into Gradle itself, but the mutations API will likely be integrated into IDE plugins and Gradle's tooling API over time. [TRANSITION: Now let's talk about Isolated Projects, a separate but complementary feature.]
+> Speaker Notes: [PACING: 2 seconds, then clarify provenance.] This is built by Gradle themselves. It's an open-source Compose Desktop application at github.com/gradle/gradle-client. It's a reference implementation showing what's possible when build files are statically analyzable. The Mutations API is the key concept here: because DCL files are structured data, tooling can safely modify them. Look at the code example. Adding a dependency is a typed operation, not a regex find-and-replace in a Kotlin file. This same API powers IDE refactorings and could power CI bots that auto-update dependencies. The mutations work even on DCL files that have syntax errors, because the parser understands the structure independently of validity. Note: this is currently a standalone app, not baked into Gradle itself, but the mutations API will likely be integrated into IDE plugins and Gradle's tooling API over time.
 
 ---
 
@@ -676,7 +678,7 @@ org.gradle.isolated-projects=true
 ```
 
 
-> Speaker Notes: What about Isolated Projects? It's a separate but closely related feature. It's the enforcement mechanism that prevents cross-project access. DCL builds are inherently isolated because you can't write imperative code that reaches into other projects. [AUDIENCE] Has anyone here actually tried running --isolated-projects on their build? If you have, you know what's coming next.
+> Speaker Notes: What about Isolated Projects? It's the enforcement mechanism that prevents cross-project access. DCL builds are inherently isolated because you can't write imperative code that reaches into other projects. [AUDIENCE] Has anyone here actually tried running --isolated-projects on their build? If you have, you know what's coming next.
 
 ---
 
@@ -1056,7 +1058,7 @@ abstract class MyAndroidLibraryApplyAction :
 </div>
 </div>
 
-> Speaker Notes: [PACING: 3 seconds for the side-by-side.] For enterprises with convention plugins, the migration path is pretty direct. On the left is your convention plugin today. On the right is the same logic formalized as a Project Type using Gradle's project-features binding API - three pieces. First, the Plugin<Project> is now just a marker: it carries a @BindsProjectType annotation and has no logic of its own. Second, a small binding class names the 'myAndroidLibrary' DCL block and points at an apply action. Third - and this is the key move - the exact imperative code from your convention plugin, applying AGP and setting compileSdk, relocates into the ApplyAction's apply method. BuildModel.None just means this Project Type carries no separate build-model object; the typed definition interface from the earlier slide is enough. One gotcha worth naming: reaching the Android extension needs a Project, which isn't a default apply-action service, so you inject Project and mark the binding withUnsafeApplyAction() when you add that logic. If you already have convention plugins, you're 80% of the way there - the binding is just ceremony around logic you already wrote. [TRANSITION: Now let's talk about the common pitfalls you'll hit during migration.]
+> Speaker Notes: [PACING: 3 seconds for the side-by-side.] For enterprises with convention plugins, the migration path is pretty direct. On the left is your convention plugin today. On the right is the same logic formalized as a Project Type using Gradle's project-features binding API - three pieces. First, the Plugin<Project> is now just a marker: it carries a @BindsProjectType annotation and has no logic of its own. Second, a small binding class names the 'myAndroidLibrary' DCL block and points at an apply action. Third, the imperative code from your convention plugin, applying AGP and setting compileSdk, relocates into the ApplyAction's apply method. BuildModel.None just means this Project Type carries no separate build-model object; the typed definition interface from the earlier slide is enough. One gotcha worth naming: reaching the Android extension needs a Project, which isn't a default apply-action service, so you inject Project and mark the binding withUnsafeApplyAction() when you add that logic. If you already have convention plugins, you're 80% of the way there - the binding is just ceremony around logic you already wrote.
 
 ---
 
@@ -1255,7 +1257,7 @@ graph TD
 <p style="font-size:0.72em; font-style:italic; margin:0;">"Declarative Gradle is <strong>ready</strong> for trying out our provided sample projects. Declarative Gradle is <strong style='color:#ef4444;'>not ready</strong> for adoption by plugin authors, build engineers or software engineers."<span style="color:#f5a623;"> - Official docs</span></p>
 </div>
 
-> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] Look at the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. Gradle's official docs state: "Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers." I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. One nuance on that timestamp: the standalone EAP dates to April 2025, but a lot of the recent movement - like the Project Types rename - has been shipping in core Gradle releases. Watch the mainline distribution, not just the EAP repo, to see where it's really going. [TRANSITION: Here's where it's heading.]
+> Speaker Notes: [PACING: 4 seconds for a 10-row table. Anchor on the last two rows.] This is a DCL status and compat matrix. Look at the bottom two rows. Red X's. Production readiness: not yet. Plugin author adoption: not yet. Everything above is green and working, but those last two rows are where we really stand. Gradle's official docs state: "Declarative Gradle is ready for trying out our provided sample projects. Declarative Gradle is not ready for adoption by plugin authors, build engineers or software engineers." I'm showing you this because I want you to be excited about the direction without deploying it Monday morning. This is for experimentation and preparation, not production migration today. One nuance on that timestamp: the standalone EAP dates to April 2025, but a lot of the recent movement - like the Project Types rename - has been shipping in core Gradle releases. Watch the mainline distribution, not just the EAP repo, to see where it's really going.
 
 ---
 
@@ -1273,7 +1275,7 @@ graph TD
 </div>
 
 
-> Speaker Notes: The roadmap shows steady progress. Monthly updates are published in the Gradle newsletter. We're in EAP3 now. Stable is still on the horizon - no specific date committed.
+> Speaker Notes: The roadmap shows steady progress. The three green dots are the EAPs. But notice where the "you are here" marker actually sits: it's not on an EAP anymore, it's on core Gradle. That's the important shift. The "recent" movement, the Project Types rename, the binding API, has been landing directly in mainline Gradle releases not in a new standalone EAP. After that: incubating, then stable, both still on the horizon with no committed date. If you want to track this watch the core Gradle release notes not just the declarative-gradle EAP repo.
 
 ---
 
